@@ -1,0 +1,124 @@
+@if ({ selectedDate: selectedDateService.selectedDate$.asObservable() | async }; as x) {
+    <div>
+        <h1 mat-dialog-title>Timesheet report warnings</h1>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+        <div mat-dialog-content>
+            @if (data.unassignedRoles.length > 0) {
+                <div class="px-3">
+                    <div class="group-name d-flex">
+                        <mat-icon class="unassigned-icon shift-left"> report_problem </mat-icon>
+                        <div class="list-head">Unassigned roles ({{ data.unassignedRoles.length }})</div>
+                    </div>
+                    <ul class="warnings-group">
+                        @for (employee of data.unassignedRoles; track employee.id) {
+                            <li>
+                                <a
+                                    [routerLink]="[
+                                        '/',
+                                        'employees',
+                                        employee.username,
+                                        x.selectedDate.getFullYear(),
+                                        x.selectedDate.getMonth() + 1
+                                    ]"
+                                    class="link-to-profile"
+                                    (click)="dialogRef.close()"
+                                >
+                                    {{ employee.name }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (data.unavailableRoles.length > 0) {
+                <div class="px-3">
+                    <div class="group-name d-flex">
+                        <mat-icon class="unavailable-icon shift-left"> report_problem </mat-icon>
+                        <div class="list-head">Unavailable roles ({{ data.unavailableRoles.length }})</div>
+                    </div>
+                    <ul class="warnings-group">
+                        @for (employee of data.unavailableRoles; track employee.id) {
+                            <li>
+                                <a
+                                    [routerLink]="[
+                                        '/',
+                                        'employees',
+                                        employee.username,
+                                        x.selectedDate.getFullYear(),
+                                        x.selectedDate.getMonth() + 1
+                                    ]"
+                                    class="link-to-profile"
+                                    (click)="dialogRef.close()"
+                                >
+                                    {{ employee.name }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (data.allocatedBeforeHiring.length > 0) {
+                <div class="px-3">
+                    <div class="group-name d-flex">
+                        <mat-icon class="unavailable-icon shift-left"> report_problem </mat-icon>
+                        <div class="list-head">Allocated before hiring ({{ data.allocatedBeforeHiring.length }})</div>
+                    </div>
+                    <ul class="warnings-group">
+                        @for (employee of data.allocatedBeforeHiring; track employee.id) {
+                            <li>
+                                <a
+                                    [routerLink]="[
+                                        '/',
+                                        'employees',
+                                        employee.username,
+                                        x.selectedDate.getFullYear(),
+                                        x.selectedDate.getMonth() + 1
+                                    ]"
+                                    class="link-to-profile"
+                                    (click)="dialogRef.close()"
+                                >
+                                    {{ employee.name }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            @if (data.allocatedAfterFiring.length > 0) {
+                <div class="px-3">
+                    <div class="group-name d-flex">
+                        <mat-icon class="unavailable-icon shift-left"> report_problem </mat-icon>
+                        <div class="list-head">Allocated after firing ({{ data.allocatedAfterFiring.length }})</div>
+                    </div>
+                    <ul class="warnings-group">
+                        @for (employee of data.allocatedAfterFiring; track employee) {
+                            <li>
+                                <a
+                                    [routerLink]="[
+                                        '/',
+                                        'employees',
+                                        employee.username,
+                                        x.selectedDate.getFullYear(),
+                                        x.selectedDate.getMonth() + 1
+                                    ]"
+                                    class="link-to-profile"
+                                    (click)="dialogRef.close()"
+                                >
+                                    {{ employee.name }}
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+}

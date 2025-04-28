@@ -1,0 +1,117 @@
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+}
+
+.tm-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+
+    border-radius: 2px;
+    outline: 1px solid lighten(darkblue, 0.4);
+    gap: 6px;
+
+    .tm {
+        height: 100%;
+        margin: 0;
+    }
+}
+
+.tm-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.tm {
+    display: grid;
+    grid-auto-flow: dense;
+    gap: 2px;
+
+    margin: 2px 4px;
+
+    &__title {
+        margin: 0;
+
+        font-size: 16px;
+
+        color: var(--dark-blue);
+
+        // You can center treemap title by adding 'center' class
+        &.center {
+            margin: 0 auto;
+        }
+    }
+
+    &-2 {
+        grid-template-columns: 2fr 1fr;
+    }
+
+    &-3 {
+        grid-template-rows: 3fr 0.5fr;
+        grid-template-columns: 2fr 1fr;
+
+        .tm-child:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+
+    &-4 {
+        grid-template-rows: 2fr 0.5fr;
+        grid-template-columns: 2fr 0.5fr;
+    }
+
+    &-5 {
+        grid-template-rows: 4fr 2.5fr 0.5fr;
+        grid-template-columns: 2fr 0.5fr;
+
+        .tm-child:last-child {
+            grid-column: 1 / -1;
+        }
+    }
+}
+
+.tm-child {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    height: auto;
+    padding: 8px 16px;
+
+    border-radius: 2px;
+
+    &:hover {
+        border-radius: 4px;
+
+        cursor: default;
+
+        .tm-child__title {
+            text-shadow: 1px 1px 2px rgb(0 0 0 / 30%);
+
+            transform: translate(-1px, -1px);
+
+            cursor: inherit;
+        }
+    }
+
+    &__title {
+        margin: 0;
+
+        font-size: 18px;
+
+        color: var(--white);
+        text-shadow: 0 0 2px rgb(0 0 0 / 30%);
+
+        transition: all 125ms;
+    }
+}
+
+::ng-deep .tm-tooltip {
+    font-size: 18px;
+}

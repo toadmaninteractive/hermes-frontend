@@ -1,0 +1,41 @@
+:host {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+}
+
+.view-content {
+    display: flex;
+}
+
+.content {
+    background-color: var(--mat-table-background-color);
+}
+
+.legend-wrapper {
+    padding: 100px 20px;
+}
+
+@supports (display: flex) {
+    @media screen and (width <= 1200px) {
+        .view-content {
+            flex-direction: column;
+            max-width: 784px;
+        }
+
+        .legend-wrapper {
+            padding: 20px 20px;
+        }
+    }
+}
+
+.hire-date-view {
+    width: 120px;
+    padding: 0;
+
+    background-color: transparent;
+
+    border: none;
+    outline: none;
+}

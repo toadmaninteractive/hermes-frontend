@@ -1,0 +1,26 @@
+.archived-mark {
+    padding: 0 2px;
+
+    font-size: 0.7em;
+    line-height: 1rem;
+
+    color: var(--bs-warning-text-emphasis);
+    background-color: var(--bs-warning-bg-subtle);
+
+    border: 1px solid;
+    border-color: var(--bs-warning-border-subtle);
+    border-radius: 2px;
+}
+
+.legend-item {
+    width: 32px;
+    height: 32px;
+
+    padding: 3px;
+
+    text-align: center;
+
+    border-width: 1px;
+    border-style: solid;
+    aspect-ratio: 1/1;
+}

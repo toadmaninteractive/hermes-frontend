@@ -1,0 +1,52 @@
+.user-select-container {
+    margin-top: 12px;
+
+    transition: max-height 0.3s ease;
+}
+
+/* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+// mat-list {
+//     min-width: 380px !important;
+// }
+
+// :host ::ng-deep .user-item {
+//     &:hover {
+//         background-color: skyblue;
+
+//         transition: background-color 0.3s ease;
+
+//         cursor: pointer;
+//     }
+
+//     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+//     .mat-list-item-content {
+//         justify-content: space-between;
+//     }
+
+//     /* TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version. */
+//     .mat-list-text {
+//         flex-direction: row !important;
+//         justify-content: space-between;
+//         align-items: center;
+//     }
+// }
+
+// .dialog-header {
+//     display: flex;
+//     justify-content: space-between;
+//     align-items: center;
+// }
+
+.office-label {
+    height: 24px;
+    padding: 4px 8px !important;
+
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    line-height: 16px;
+
+    background-color: var(--bs-highlight-bg);
+
+    border: none;
+    border-radius: 4px;
+}

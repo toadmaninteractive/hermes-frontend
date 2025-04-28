@@ -1,0 +1,133 @@
+@if (
+    {
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async
+    };
+    as x
+) {
+    {{ getOperationDescription(data.operation) }}
+    @if (
+        data.operation === operation.Allocate ||
+        data.operation === operation.Deallocate ||
+        data.operation === operation.Absence
+    ) {
+        <ng-container
+            [ngTemplateOutlet]="affectedUsers"
+            [ngTemplateOutletContext]="{ affects: data.properties['affects'], selectedDate: x.selectedDate }"
+        />
+        @if (data.operation === operation.Allocate) {
+            to
+            <a
+                [routerLink]="[
+                    '/',
+                    'projects',
+                    getSimpleTitle(data.properties['data']['project']['title']),
+                    x.selectedDate.getFullYear(),
+                    x.selectedDate.getMonth() + 1
+                ]"
+                target="_blank"
+                >{{ data.properties['data']['project']['title'] }}</a
+            >
+        }
+        @if (data.operation === operation.Absence) {
+            @if (
+                data.properties['data'] &&
+                data.properties['data']['absence'] &&
+                data.properties['data']['absence']['code']
+            ) {
+                as
+                <strong>
+                    {{
+                        timeOffKind.getDescription(timeOffKind.fromJsonKey(data.properties['data']['absence']['code']))
+                    }}
+                </strong>
+            }
+        }
+        for {{ dateToString(data.properties['when']) }}
+    } @else {
+        {{ dateToString(data.properties['when']) }} for
+        <ng-container
+            [ngTemplateOutlet]="affectedUsers"
+            [ngTemplateOutletContext]="{
+                affects: data.properties['affects'],
+                selectedDate: selectedDateService.selectedDate$.asObservable() | async
+            }"
+        />
+    }
+    @if (data.comment) {
+        <br />
+        Reason: {{ data.comment }}
+    }
+}
+
+<ng-template
+    #affectedUsers
+    let-affects="affects"
+    let-selectedDate="selectedDate"
+>
+    @for (user of affects | slice: 0 : 3; track user; let i = $index) {
+        <ng-container class="affects-list">
+            <a
+                [href]="
+                    '/employees/' +
+                    $any(user).username +
+                    '/' +
+                    selectedDate.getFullYear() +
+                    '/' +
+                    (selectedDate.getMonth() + 1)
+                "
+                [matTooltip]="getUserTooltip($any(user).id)"
+                appMatTooltipAutoHide
+                class="user-link"
+                matTooltipPosition="above"
+                target="_blank"
+            >
+                {{ $any(user).name }}
+            </a>
+            @if (i !== (affects | slice: 0 : 3).length - 1) {
+                <span>,&nbsp;</span>
+            }
+        </ng-container>
+    }
+
+    @if (affects.length - 3 > 0) {
+        <span
+            [class.more-users_open]="showFullList"
+            class="more-users"
+            (click)="switchShowMode()"
+        >
+            +{{ affects.length - 3 }}&nbsp;employees
+        </span>
+    }
+
+    @if (showFullList) {
+        <div
+            [@fadeAnimation]="showFullList"
+            class="affects-list"
+        >
+            @for (user of affects | slice: 3; track user; let i = $index) {
+                <ng-container class="affects-list">
+                    <a
+                        [href]="
+                            '/employees/' +
+                            $any(user).username +
+                            '/' +
+                            selectedDate.getFullYear() +
+                            '/' +
+                            (selectedDate.getMonth() + 1)
+                        "
+                        [matTooltip]="getUserTooltip($any(user).id)"
+                        appMatTooltipAutoHide
+                        class="user-link"
+                        matTooltipPosition="above"
+                        target="_blank"
+                    >
+                        {{ $any(user).name }}
+                    </a>
+                    @if (i !== (affects | slice: 3).length - 1) {
+                        <span class="comma">,&nbsp;</span>
+                    }
+                </ng-container>
+            }
+        </div>
+    }
+</ng-template>

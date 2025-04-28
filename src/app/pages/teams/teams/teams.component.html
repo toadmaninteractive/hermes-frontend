@@ -1,0 +1,306 @@
+@if (
+    {
+        date: date$.asObservable() | async,
+        displayedColumns: displayedColumns$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        profile: accountService.profile$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <div class="d-flex justify-content-between flex-fill">
+                    <div class="d-flex align-items-center gap-2">
+                        <mat-form-field
+                            class="filter"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                [formControl]="filterControl"
+                                matInput
+                                placeholder="Type to filter..."
+                            />
+                            @if (filterControl.value) {
+                                <button
+                                    aria-label="Clear"
+                                    class="f-s-10"
+                                    mat-icon-button
+                                    matSuffix
+                                    type="button"
+                                    (click)="filterControl.patchValue('')"
+                                >
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            }
+                        </mat-form-field>
+                        <button
+                            appMatTooltipAutoHide
+                            class="d-flex"
+                            mat-icon-button
+                            matTooltip="Click to refresh"
+                            matTooltipPosition="above"
+                            title="Refresh"
+                            type="button"
+                            (click)="refresh()"
+                        >
+                            <mat-icon color="primary">autorenew</mat-icon>
+                        </button>
+                    </div>
+                    @if (x?.profile.isSuperadmin || allowedUsersSet.has(x?.profile.id)) {
+                        <button
+                            color="primary"
+                            mat-raised-button
+                            type="button"
+                            (click)="showTeamCreateDialog()"
+                        >
+                            Add team
+                        </button>
+                    }
+                </div>
+            </mat-toolbar>
+        </div>
+        <div
+            [class.empty-table]="dataSource?.filteredData?.length === 0"
+            [style.overflow]="x.loading ? 'hidden' : 'auto'"
+            class="h-100 d-flex justify-content-between flex-column"
+            with-scroll-top
+        >
+            <table
+                [dataSource]="dataSource"
+                [matSortActive]="sortBy"
+                [matSortDirection]="sortDir"
+                class="w-100"
+                mat-table
+                matSort
+                matSortDisableClear
+                (matSortChange)="sortTable($event, x.profile.username)"
+            >
+                <!-- ID column -->
+                <ng-container [matColumnDef]="column.Id">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Id"
+                        class="cell-id non-selectable"
+                        mat-header-cell
+                    >
+                        ID
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        <strong>{{ team.id }}</strong>
+                    </td>
+                </ng-container>
+                <!-- Title column -->
+                <ng-container [matColumnDef]="column.Title">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Title"
+                        class="cell non-selectable"
+                        mat-header-cell
+                    >
+                        Team Name
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        <div class="d-flex align-items-center">
+                            <a [routerLink]="[getTeamLink(team.title), x.date.getFullYear(), x.date.getMonth() + 1]">
+                                <strong>{{ team.title }}</strong>
+                            </a>
+                        </div>
+                    </td>
+                </ng-container>
+                <!-- Members column -->
+                <ng-container [matColumnDef]="column.MemberCount">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.MemberCount"
+                        class="non-selectable"
+                        mat-header-cell
+                    >
+                        Members
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        {{ team?.members?.length }}
+                    </td>
+                </ng-container>
+                <!-- Created By column -->
+                <ng-container [matColumnDef]="column.CreatedByName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.CreatedByName"
+                        class="cell-supervisor non-selectable"
+                        mat-header-cell
+                    >
+                        Created By
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        <div class="d-flex align-items-center">
+                            <a
+                                [routerLink]="[
+                                    '/',
+                                    'employees',
+                                    team.createdByUsername,
+                                    x.date.getFullYear(),
+                                    x.date.getMonth() + 1
+                                ]"
+                            >
+                                <strong>{{ team.createdByName }}</strong>
+                            </a>
+                        </div>
+                    </td>
+                </ng-container>
+                <!-- Created At column -->
+                <ng-container [matColumnDef]="column.CreatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.CreatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Created At
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        {{ team.createdAt | date: 'yyyy-MM-dd hh:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Updated At column -->
+                <ng-container [matColumnDef]="column.UpdatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.UpdatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Updated At
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        mat-cell
+                    >
+                        {{ team.updatedAt | date: 'yyyy-MM-dd hh:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Actions column -->
+                <ng-container [matColumnDef]="column.Actions">
+                    <th
+                        *matHeaderCellDef
+                        class="cell-actions non-selectable text-center"
+                        mat-header-cell
+                    >
+                        Actions
+                    </th>
+                    <td
+                        *matCellDef="let team"
+                        class="text-center"
+                        mat-cell
+                    >
+                        <button
+                            [disableRipple]="true"
+                            [matMenuTriggerFor]="menu"
+                            mat-icon-button
+                            type="button"
+                        >
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            @if (x.profile?.isSuperadmin || x.profile?.id === team.createdBy) {
+                                <button
+                                    [disableRipple]="true"
+                                    appMatTooltipAutoHide
+                                    mat-menu-item
+                                    matTooltip="Click to edit"
+                                    matTooltipPosition="above"
+                                    type="button"
+                                    (click)="showTeamEditDialog(team)"
+                                >
+                                    <mat-icon>edit</mat-icon>
+                                    <span>Edit team</span>
+                                </button>
+                            }
+                            @if (x.profile?.isSuperadmin || x.profile?.id === team.createdBy) {
+                                <button
+                                    [disableRipple]="true"
+                                    appMatTooltipAutoHide
+                                    mat-menu-item
+                                    matTooltip="Click to edit"
+                                    matTooltipPosition="above"
+                                    type="button"
+                                    (click)="showTeamManagerEditDialog(team)"
+                                >
+                                    <mat-icon>manage_accounts</mat-icon>
+                                    <span>Managers list</span>
+                                </button>
+                            }
+                            @if (x.profile?.isSuperadmin || x.profile?.id === team.createdBy) {
+                                <button
+                                    [appConfirmConfig]="{
+                                        data: {
+                                            title: 'Confirmation',
+                                            html: 'Delete team <b>' + team.title + '</b>?',
+                                            confirmText: 'Delete'
+                                        }
+                                    }"
+                                    [disableRipple]="true"
+                                    appMatTooltipAutoHide
+                                    color="warn"
+                                    mat-menu-item
+                                    matTooltip="Click to delete"
+                                    matTooltipPosition="above"
+                                    type="button"
+                                    (confirm)="deleteTeam(team)"
+                                >
+                                    <mat-icon color="warn">delete</mat-icon>
+                                    <span>Delete</span>
+                                </button>
+                            }
+                        </mat-menu>
+                    </td>
+                </ng-container>
+                <!-- Table rows -->
+                <tr
+                    *matHeaderRowDef="x.displayedColumns; sticky: true"
+                    mat-header-row
+                ></tr>
+                <tr
+                    *matRowDef="let row; columns: x.displayedColumns"
+                    mat-row
+                ></tr>
+            </table>
+            @if (dataSource?.filteredData?.length === 0) {
+                <div class="indicator">
+                    @switch (x.loading) {
+                        @case (true) {
+                            <app-loading-indicator [isInline]="true" />
+                        }
+                        @case (false) {
+                            <span>No records found</span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <mat-paginator
+            [length]="dataSource?.filteredData?.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizes"
+            class="paginator-fixed mat-elevation-z2"
+            showFirstLastButtons
+            (page)="paginatorChanged($event, x.profile.username)"
+        />
+    </div>
+}

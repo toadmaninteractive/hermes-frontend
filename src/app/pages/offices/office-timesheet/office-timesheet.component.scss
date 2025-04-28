@@ -1,0 +1,50 @@
+:host {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+}
+
+.title-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.color-indicator {
+    width: 20px;
+    height: 20px;
+    padding: 0 6px;
+
+    background: white;
+
+    border: 1px solid;
+    border-radius: 2px;
+}
+
+.info {
+    display: flex;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    justify-content: space-between;
+    padding-left: 18px;
+
+    &-item {
+        font-size: 1.1em;
+    }
+
+    &-gap {
+        gap: 5px;
+    }
+}
+
+.mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.td-action-btns {
+    &.readonly * {
+        cursor: not-allowed;
+    }
+}

@@ -1,0 +1,75 @@
+@if (
+    {
+        employees: employees$.asObservable() | async,
+        filteredEmployees: filteredEmployees$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>
+            <span>Absence summary for </span>
+            <span>{{ x.selectedDate | date: 'MMMM, YYYY' }}</span>
+        </h3>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            style="width: 400px"
+            subscriptSizing="dynamic"
+        >
+            <mat-select
+                [(ngModel)]="omittedEmployees"
+                [multiple]="true"
+                placeholder="Omit employees (optional)"
+            >
+                <mat-option>
+                    <ngx-mat-select-search
+                        ngModel
+                        noEntriesFoundLabel="No matches"
+                        placeholderLabel="Type to filter..."
+                        (ngModelChange)="filterEmployees($event, x.employees)"
+                    />
+                </mat-option>
+                @for (employee of x.filteredEmployees; track employee) {
+                    <mat-option [value]="employee.id">
+                        {{ employee.name }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="dialogRef.close(null)"
+        >
+            Cancel
+        </button>
+        <a
+            href="{{ reportService.baseUrl }}/api/timeoff/report/monthly/{{ x.selectedDate.getFullYear() }}/{{
+                x.selectedDate.getMonth() + 1
+            }}/office/{{ data.officeId }}/excel?a={{
+                omittedEmployees.length ? '&omit_ids=' + omittedEmployees.join(',') : null
+            }}"
+            color="primary"
+            download
+            mat-raised-button
+            (click)="dialogRef.close()"
+        >
+            Download
+        </a>
+    </div>
+}

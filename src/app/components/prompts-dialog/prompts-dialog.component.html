@@ -1,0 +1,172 @@
+<div class="dialog-container">
+    <button
+        [matMenuTriggerFor]="helpMenu"
+        aria-label="Help"
+        mat-button
+        type="button"
+    >
+        <mat-icon>help_outline</mat-icon>
+        <span>Help</span>
+    </button>
+    <mat-menu #helpMenu="matMenu">
+        <ng-template matMenuContent>
+            <table class="prompts-table">
+                <caption class="prompts-table-caption">
+                    Allocation table cheat sheet
+                </caption>
+                <tr>
+                    <td>Copy selected cells</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/ctrl.svg'"
+                                aria-label="ctrl icon"
+                                class="inline-icon"
+                            ></span>
+                            +
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/c.svg'"
+                                aria-label="c icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Paste selection</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/ctrl.svg'"
+                                aria-label="ctrl icon"
+                                class="inline-icon"
+                            ></span>
+                            +
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/v.svg'"
+                                aria-label="v icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Open action dialog</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/enter.svg'"
+                                aria-label="enter icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Close action dialog</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/esc.svg'"
+                                aria-label="esc icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Browse action history</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/mouse-right-click.svg'"
+                                aria-label="mouse right click icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Invoke context menu</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/mouse-left-click.svg'"
+                                aria-label="mouse left click icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Switch month</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/alt.svg'"
+                                aria-label="alt icon"
+                                class="inline-icon"
+                            ></span>
+                            +
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/arrow-left.svg'"
+                                aria-label="arrow left icon"
+                                class="inline-icon"
+                            ></span>
+                            /
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/arrow-right.svg'"
+                                aria-label="arrow right icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Select multiple cells</td>
+                    <td>
+                        <div class="hotkey-wrapper">
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/shift.svg'"
+                                aria-label="shift icon"
+                                class="inline-icon"
+                            ></span>
+                            +
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/arrow-left.svg'"
+                                aria-label="arrow left icon"
+                                class="inline-icon"
+                            ></span>
+                            /
+                            <span
+                                [cacheSVG]="true"
+                                [inlineSVG]="'/assets/media/svg/icons/Keyboard/arrow-right.svg'"
+                                aria-label="arrow right icon"
+                                class="inline-icon"
+                            ></span>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Navigate table using arrow keys</td>
+                </tr>
+                <tr>
+                    <td>Select arbitrary area using mouse</td>
+                </tr>
+            </table>
+        </ng-template>
+    </mat-menu>
+</div>

@@ -1,0 +1,386 @@
+@if (
+    {
+        loading: loading$.asObservable() | async,
+        profile: accountService.profile$.asObservable() | async,
+        date: date$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <!-- <div class="d-flex p-3"> -->
+        <div>
+            <mat-toolbar>
+                <div class="d-flex justify-content-between flex-fill gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <mat-form-field
+                            class="filter"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                [formControl]="filterControl"
+                                matInput
+                                placeholder="Type to filter..."
+                            />
+                            @if (filterControl.value) {
+                                <button
+                                    aria-label="Clear"
+                                    mat-icon-button
+                                    matSuffix
+                                    type="button"
+                                    (click)="filterControl.patchValue('')"
+                                >
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            }
+                        </mat-form-field>
+                        <button
+                            appMatTooltipAutoHide
+                            class="d-flex"
+                            mat-icon-button
+                            matTooltip="Click to refresh"
+                            matTooltipPosition="above"
+                            title="Refresh"
+                            type="button"
+                            (click)="refresh()"
+                        >
+                            <mat-icon color="primary">autorenew</mat-icon>
+                        </button>
+                        <mat-checkbox
+                            [(ngModel)]="showArchived"
+                            [disableRipple]="true"
+                            (change)="onArchivedChecked(projects, x.profile.username)"
+                        >
+                            Include archived
+                        </mat-checkbox>
+                    </div>
+                    @if (x.profile?.isSuperadmin) {
+                        <button
+                            color="primary"
+                            mat-raised-button
+                            type="button"
+                            (click)="showProjectCreateDialog()"
+                        >
+                            Add project
+                        </button>
+                    }
+                </div>
+            </mat-toolbar>
+        </div>
+
+        <div
+            [class.empty-table]="dataSource?.filteredData?.length === 0"
+            [style.overflow]="x.loading ? 'hidden' : 'auto'"
+            class="h-100 d-flex justify-content-between flex-column"
+            with-scroll-top
+        >
+            <table
+                [dataSource]="dataSource"
+                [matSortActive]="sortBy"
+                [matSortDirection]="sortDir"
+                class="w-100"
+                fixedLayout
+                mat-table
+                matSort
+                matSortDisableClear
+                (matSortChange)="sortTable($event, x.profile.username)"
+            >
+                <!-- ID column -->
+                <ng-container [matColumnDef]="column.Id">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Id"
+                        class="cell-id non-selectable"
+                        mat-header-cell
+                    >
+                        ID
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        <strong>{{ project.id }}</strong>
+                    </td>
+                </ng-container>
+                <!-- Project Title column -->
+                <ng-container [matColumnDef]="column.Title">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Title"
+                        class="cell-project-name non-selectable"
+                        mat-header-cell
+                    >
+                        Project Title
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        <span
+                            [style.background-color]="project.color"
+                            class="project-color-preview me-2 align-middle"
+                        ></span>
+                        <a
+                            [routerLink]="[getSimpleTitle(project.title), x.date.getFullYear(), x.date.getMonth() + 1]"
+                            class="align-middle"
+                        >
+                            <strong>{{ project.title }}</strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Visma Code column -->
+                <ng-container [matColumnDef]="column.FinanceCode">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.FinanceCode"
+                        class="cell-code non-selectable"
+                        mat-header-cell
+                    >
+                        Visma Code
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        {{ project.financeCode }}
+                    </td>
+                </ng-container>
+                <!-- Leading Office column -->
+                <ng-container [matColumnDef]="column.LeadingOfficeName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.LeadingOfficeName"
+                        class="cell-name non-selectable"
+                        mat-header-cell
+                    >
+                        Leading Office
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        <a
+                            [routerLink]="[
+                                '/',
+                                'offices',
+                                getSimpleTitle(project.leadingOfficeName),
+                                x.date.getFullYear(),
+                                x.date.getMonth() + 1
+                            ]"
+                        >
+                            <strong>{{ project.leadingOfficeName }}</strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Supervisor column -->
+                <ng-container [matColumnDef]="column.SupervisorName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.SupervisorName"
+                        class="cell-supervisor non-selectable"
+                        mat-header-cell
+                    >
+                        Supervisor
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        <a
+                            [routerLink]="[
+                                '/',
+                                'employees',
+                                project.supervisorUsername,
+                                x.date.getFullYear(),
+                                x.date.getMonth() + 1
+                            ]"
+                        >
+                            <strong>{{ project.supervisorName }}</strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Summary column -->
+                <ng-container [matColumnDef]="column.Summary">
+                    <th
+                        *matHeaderCellDef
+                        class="cell-summary non-selectable"
+                        mat-header-cell
+                    >
+                        Summary
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        <a [routerLink]="'/summary/' + getSimpleTitle(project.title)">
+                            <strong>Summary</strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Started At column -->
+                <ng-container [matColumnDef]="column.StartedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.StartedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Started At
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        @if (project.startedAt) {
+                            <span>{{ project.startedAt | date: 'yyyy-MM-dd hh:mm' }}</span>
+                        } @else {
+                            <span class="text-muted">Not specified</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Finished At column -->
+                <ng-container [matColumnDef]="column.FinishedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.FinishedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Finished At
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        @if (project.finishedAt) {
+                            <span>{{ project.finishedAt | date: 'yyyy-MM-dd hh:mm' }}</span>
+                        } @else {
+                            <span class="text-muted">Not specified</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Updated At column -->
+                <ng-container [matColumnDef]="column.UpdatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.UpdatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Updated At
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        {{ project.updatedAt | date: 'yyyy-MM-dd hh:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Archived -->
+                <ng-container [matColumnDef]="column.Archived">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Archived"
+                        class="cell-archive non-selectable"
+                        mat-header-cell
+                    >
+                        Archived
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        mat-cell
+                    >
+                        {{ project.isArchived ? 'Yes' : 'No' }}
+                    </td>
+                </ng-container>
+                <!-- Actions column -->
+                <ng-container [matColumnDef]="column.Actions">
+                    <th
+                        *matHeaderCellDef
+                        class="cell-actions text-center non-selectable"
+                        mat-header-cell
+                    >
+                        Actions
+                    </th>
+                    <td
+                        *matCellDef="let project"
+                        class="text-center"
+                        mat-cell
+                    >
+                        <button
+                            [disableRipple]="true"
+                            [matMenuTriggerFor]="menu"
+                            mat-icon-button
+                            type="button"
+                        >
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            <button
+                                [disableRipple]="true"
+                                appMatTooltipAutoHide
+                                mat-menu-item
+                                matTooltip="Click to edit"
+                                matTooltipPosition="above"
+                                type="button"
+                                (click)="showProjectEditDialog(project)"
+                            >
+                                <mat-icon>edit</mat-icon>
+                                <span>Edit</span>
+                            </button>
+                            <button
+                                [appConfirmConfig]="{
+                                    data: {
+                                        title: 'Confirmation',
+                                        html: 'Delete project <b>' + project.title + '</b>?',
+                                        confirmText: 'Delete'
+                                    }
+                                }"
+                                [disableRipple]="true"
+                                appMatTooltipAutoHide
+                                mat-menu-item
+                                matTooltip="Click to delete"
+                                matTooltipPosition="above"
+                                type="button"
+                                (confirm)="deleteProject(project)"
+                            >
+                                <mat-icon color="warn">delete</mat-icon>
+                                <span>Delete</span>
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+                <!-- Table rows -->
+                <tr
+                    *matHeaderRowDef="displayedColumns; sticky: true"
+                    mat-header-row
+                ></tr>
+                <tr
+                    *matRowDef="let row; columns: displayedColumns"
+                    [class.archived]="row.isArchived"
+                    mat-row
+                ></tr>
+            </table>
+            @if (dataSource?.filteredData?.length === 0) {
+                <div class="indicator">
+                    @switch (x.loading) {
+                        @case (true) {
+                            <app-loading-indicator [isInline]="true" />
+                        }
+                        @case (false) {
+                            <span>No records found</span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <mat-paginator
+            [length]="dataSource?.filteredData?.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizes"
+            class="paginator-fixed mat-elevation-z2"
+            showFirstLastButtons
+            (page)="paginatorChanged($event, x.profile.username)"
+        />
+    </div>
+}

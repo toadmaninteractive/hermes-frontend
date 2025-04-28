@@ -1,0 +1,128 @@
+@if (
+    {
+        profile: accountService.profile$.asObservable() | async,
+        teams: cacheService.teams$.asObservable() | async,
+        teamManagers: cacheService.teamManagers$.asObservable() | async,
+        projects: cacheService.projects$.asObservable() | async
+    };
+    as x
+) {
+    <mat-sidenav-container class="h-100">
+        <mat-sidenav
+            #sidenav
+            [mode]="isSmall ? 'over' : 'side'"
+            [opened]="isOpen"
+            fixedInViewport
+            style="width: 220px"
+        >
+            <div class="d-flex flex-column justify-content-between h-100">
+                <div>
+                    @if (!isSmall) {
+                        <div class="d-flex align-items-center">
+                            <div class="p-3">
+                                <ng-container *ngTemplateOutlet="logo" />
+                            </div>
+
+                            <ng-container *ngTemplateOutlet="switchTheme" />
+                        </div>
+                    }
+
+                    <mat-nav-list>
+                        @for (item of menuItems; track item.title) {
+                            @if (matchesFor(item.for, x.profile, x.projects, x.teams, x.teamManagers)) {
+                                <a
+                                    #rla="routerLinkActive"
+                                    [activated]="rla.isActive"
+                                    [routerLink]="item.page"
+                                    mat-list-item
+                                    routerLinkActive
+                                    (click)="isSmall ? sidenav.close() : null"
+                                >
+                                    <!-- [routerLinkActive]="['active']" -->
+                                    <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+
+                                    <span
+                                        class="align-middle"
+                                        matListItemTitle
+                                        >{{ item.title }}</span
+                                    >
+                                </a>
+                            }
+                        }
+                    </mat-nav-list>
+                </div>
+                <mat-nav-list>
+                    <mat-list-item (click)="logout()">
+                        <mat-icon matListItemIcon>logout</mat-icon>
+
+                        <span
+                            class="align-middle"
+                            matListItemTitle
+                        >
+                            Log Out
+                        </span>
+                    </mat-list-item>
+                </mat-nav-list>
+            </div>
+        </mat-sidenav>
+        <mat-sidenav-content>
+            @if (isSmall) {
+                <mat-toolbar
+                    class="justify-content-between"
+                    color="primary"
+                >
+                    <div class="d-flex align-items-center gap-3">
+                        <ng-container *ngTemplateOutlet="menu" />
+                        <ng-container *ngTemplateOutlet="logo" />
+                    </div>
+                    <ng-container *ngTemplateOutlet="switchTheme" />
+                </mat-toolbar>
+            }
+            <div
+                [class.h-100]="!isSmall"
+                [class.small-size-content]="isSmall"
+            >
+                <router-outlet />
+            </div>
+        </mat-sidenav-content>
+    </mat-sidenav-container>
+}
+
+<ng-template #logo>
+    <div class="brand flex-column-auto">
+        <a
+            class="brand-logo"
+            routerLink="/"
+        >
+            <img src="./assets/media/logos/logo_stroke.png" /><span class="logo">ERMES</span>
+            <span class="version">v.{{ version }}</span>
+        </a>
+    </div>
+</ng-template>
+
+<ng-template #switchTheme>
+    <button
+        [matTooltip]="'Switch theme to ' + (currentTheme === 'light' ? 'dark' : 'light')"
+        mat-icon-button
+        type="button"
+        (click)="toggleTheme()"
+    >
+        <mat-icon>
+            @if (currentTheme === 'dark') {
+                light_mode
+            } @else {
+                dark_mode
+            }
+        </mat-icon>
+    </button>
+</ng-template>
+
+<ng-template #menu>
+    <button
+        mat-icon-button
+        type="button"
+        (click)="sidenav.toggle()"
+    >
+        <mat-icon>menu</mat-icon>
+    </button>
+</ng-template>

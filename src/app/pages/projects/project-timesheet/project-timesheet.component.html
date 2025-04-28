@@ -1,0 +1,283 @@
+@if (
+    {
+        allowedRoles: allowedRolesSet$.asObservable() | async,
+        direction: direction$.asObservable() | async,
+        employees: cacheService.employees$ | async,
+        highlights: highlights$.asObservable() | async,
+        highlightMap: highlightsMap$.asObservable() | async,
+        linkMap: linkMap$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        office: office$.asObservable() | async,
+        offices: cacheService.offices$.asObservable() | async,
+        participants: participants$.asObservable() | async,
+        privileges: privileges$.asObservable() | async,
+        project: project$.asObservable() | async,
+        projects: cacheService.projects$.asObservable() | async,
+        removedEmployeeId: removedEmployeeId$.asObservable() | async,
+        roles: cacheService.roles$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async,
+        synchronizing: synchronizing$.asObservable() | async,
+        timesheet: timesheet$.asObservable() | async,
+        updatedCells: updatedCells$.asObservable() | async,
+        updatedRow: updatedRow$.asObservable() | async,
+        updatedEmployees: updatedEmployees$.asObservable() | async
+    };
+    as x
+) {
+    @if (x.project) {
+        <div>
+            <mat-toolbar>
+                <mat-toolbar-row>
+                    <div class="d-flex align-items-center justify-content-between flex-fill">
+                        <div class="d-inline-flex align-items-center gap-2">
+                            <div
+                                [style.background]="x.project.color"
+                                class="key"
+                            >
+                                {{ x.project.title | uppercase | slice: 0 : 1 }}
+                            </div>
+
+                            <h1 class="mat-headline-4 m-0 user-select-all">{{ x.project.title }}</h1>
+                            <button
+                                color="primary"
+                                mat-button
+                                type="button"
+                                (click)="openSwitchProjectDialog(x.projects, x.selectedDate)"
+                            >
+                                Switch project
+                            </button>
+                        </div>
+                        <app-month-picker
+                            [keysDirection]="x.direction"
+                            (dateChange)="selectedDateService.selectedDate$.next($event)"
+                        />
+                    </div>
+                </mat-toolbar-row>
+            </mat-toolbar>
+        </div>
+        <div class="d-flex justify-content-between gap-4 px-3 py-1">
+            <div class="info-card flex-wrap">
+                <div class="info-card-grid flag">
+                    @if (x.office?.countryAlpha2) {
+                        <app-country-flag
+                            [alt]="x.office?.countryName + ' flag'"
+                            [code]="x.office?.countryAlpha2"
+                        />
+                    } @else {
+                        <div
+                            [cacheSVG]="true"
+                            [inlineSVG]="'./assets/media/svg/icons/Other/earth.svg'"
+                            class="svg-icon svg-icon-xl svg-icon_padding"
+                        ></div>
+                    }
+                    @if (x.office?.name) {
+                        <span class="info-card-title"> {{ x.office.name }} </span>
+                    } @else {
+                        <app-loading-indicator [isInline]="true" />
+                    }
+
+                    <div class="info-card-action-btns">
+                        @if (x.privileges?.canChangeLeadingOffice) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="
+                                    openSwitchOfficeDialog(
+                                        x.privileges.canChangeLeadingOffice,
+                                        x.project.id,
+                                        x.office?.id,
+                                        x.offices
+                                    )
+                                "
+                            >
+                                <small>change</small>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <div class="info-card-grid">
+                    <mat-icon class="align-middle">person</mat-icon>
+                    <span class="info-card-title">
+                        {{ x.project.supervisorName }}
+                    </span>
+                    <div class="info-card-action-btns">
+                        @if (x.privileges?.canChangeProjectSupervisor) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="
+                                    openChangeSupervisorDialog(x.privileges.canChangeProjectSupervisor, x.project.id)
+                                "
+                            >
+                                <small>change</small>
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="info-card-grid">
+                    <mat-icon class="align-middle">people</mat-icon>
+                    @if (!x.loading) {
+                        <span class="info-card-title"> {{ x.participants }} participants </span>
+                    } @else {
+                        <app-loading-indicator [isInline]="true" />
+                    }
+                    @if (x.privileges?.canChangeProjectSupervisor || x.privileges?.canChangeLeadingOffice) {
+                        <div
+                            class="info-card-action-btns"
+                            style="line-height: var(--mdc-text-button-container-height)"
+                        >
+                            &nbsp;
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <app-prompts-dialog />
+        </div>
+
+        <div class="d-flex flex-fill flex-column overflow-hidden">
+            <app-table-grid
+                [canEditCell]="x.privileges?.canEditCell"
+                [enterPressed$]="enterPressedEvent$"
+                [loading]="x.loading || x.synchronizing"
+                [navDirection$]="navDirection$"
+                [removeRowId]="x.removedEmployeeId"
+                [timesheet]="x.timesheet"
+                [updatedCell]="x.updatedCells"
+                [updatedEmployees]="x.updatedEmployees"
+                [updatedRow]="x.updatedRow"
+                class="project-table"
+                (dblClick)="showCellHistory($event)"
+                (rangeSelected)="onRangeSelected($event)"
+                (rightClick)="openCellAllocateDialog($event)"
+            >
+                <ng-template #menuTemplate>
+                    <app-table-menu
+                        [entity]="x.project"
+                        [isAllCellProtected]="isAllCellProtected(x.timesheet)"
+                        [isAllCellUnprotected]="isAllCellUnprotected(x.timesheet)"
+                        [privileges]="x.privileges"
+                        [synchronizing]="x.synchronizing"
+                        (addEmployeeToProject)="
+                            addEmployeeToProject(x.project.id, x.selectedDate, x.participants, x.employees, x.linkMap)
+                        "
+                        (protect)="protectTimesheet(x.timesheet)"
+                        (regenerate)="onRegenerate(x.selectedDate)"
+                        (showTimesheetHistory)="showTimesheetHistory(x.project, x.selectedDate)"
+                        (synchronize)="onSynchronize(x.project, x.selectedDate)"
+                        (unprotect)="unprotectTimesheet(x.timesheet)"
+                    />
+                </ng-template>
+                <ng-template
+                    #employeeColumn
+                    let-employee="employee"
+                    let-linkedList="linkedList"
+                    let-vismaTooltip="vismaTooltip"
+                >
+                    <div
+                        [matTooltip]="vismaTooltip"
+                        appMatTooltipAutoHide
+                        matTooltipClass="f-s-14"
+                    >
+                        <span class="employee-name">{{ employee.name }}</span>
+                        <br />
+                        <strong class="employee-project">
+                            @if (employee.allocatedToProjectId) {
+                                on&nbsp;{{ employee.allocatedToProjectName }}
+                            } @else {
+                                <span class="text-danger">No&nbsp;project</span>
+                            }
+                        </strong>
+                    </div>
+                    <div
+                        [class.readonly]="!x.privileges?.canEditCell"
+                        class="td-action-btns"
+                    >
+                        @if (!employee.roleId) {
+                            <button
+                                appMatTooltipAutoHide
+                                class="text-danger"
+                                mat-icon-button
+                                matTooltip="Assign role"
+                                type="button"
+                                (click)="
+                                    onRoleChange(
+                                        x.roles,
+                                        employee.id,
+                                        $event,
+                                        null,
+                                        x.allowedRoles,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                <mat-icon fontSet="material-icons-outlined">work_off</mat-icon>
+                            </button>
+                        }
+                        @if (x.linkMap.get(employee.id)) {
+                            <button
+                                mat-icon-button
+                                type="button"
+                                (click)="
+                                    unlinkEmployeeFromProject(
+                                        x.project.id,
+                                        x.selectedDate,
+                                        x.participants,
+                                        employee,
+                                        $event,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                <mat-icon> link_off</mat-icon>
+                            </button>
+                        }
+                        @if (!x.highlightMap.has(employee.id) && x.privileges?.canEditCell) {
+                            <button
+                                appMatTooltipAutoHide
+                                class="highlight-icon me-1"
+                                mat-icon-button
+                                matTooltip="Highlight person"
+                                type="button"
+                                (click)="
+                                    onHighlightEmployee(
+                                        employee,
+                                        x.project.id,
+                                        $event,
+                                        x.highlights,
+                                        x.highlightMap,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                <mat-icon> star_outline </mat-icon>
+                            </button>
+                        }
+                        @if (x.highlightMap.has(employee.id)) {
+                            <div
+                                [matTooltip]="x.highlightMap.get(employee.id)"
+                                appMatTooltipAutoHide
+                                class="stars-wrap cursor-pointer"
+                                (click)="
+                                    onHighlightEmployee(
+                                        employee,
+                                        x.project.id,
+                                        $event,
+                                        x.highlights,
+                                        x.highlightMap,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                @for (highlight of x.highlightMap.get(employee.id).split(','); track highlight) {
+                                    <mat-icon style="color: var(--bs-yellow)"> star </mat-icon>
+                                }
+                            </div>
+                        }
+                    </div>
+                </ng-template>
+            </app-table-grid>
+        </div>
+    }
+}

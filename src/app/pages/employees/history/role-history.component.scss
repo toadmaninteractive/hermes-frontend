@@ -1,0 +1,14 @@
+.card {
+    display: grid;
+    grid-template-rows: auto 1fr;
+
+    &-body {
+        overflow: auto;
+    }
+}
+
+.history-entry {
+    font-size: 14px;
+    line-height: 24px;
+    font-family: 'JetBrains Mono', monospace;
+}

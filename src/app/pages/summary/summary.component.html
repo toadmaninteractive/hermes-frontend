@@ -1,0 +1,356 @@
+@if (
+    {
+        isSuperAdmin: accountService.isSuperAdmin$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        dateRange: dateRange$.asObservable() | async,
+        project: project$.asObservable() | async,
+        projects: projects$.asObservable() | async,
+        employees: employees$.asObservable() | async,
+        tableData: tableData$.asObservable() | async,
+        dataForCSV: dataForCSV$.asObservable() | async,
+        rows: rows$.asObservable() | async,
+        privileges: privileges$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        @if (x.project) {
+            <div>
+                <mat-toolbar>
+                    <mat-toolbar-row>
+                        <div class="d-flex align-items-center justify-content-between flex-fill">
+                            <div class="d-inline-flex align-items-center gap-2">
+                                <div
+                                    [style.background]="x.project.color"
+                                    class="key"
+                                >
+                                    {{ x.project.title | uppercase | slice: 0 : 1 }}
+                                </div>
+
+                                <h1 class="mat-headline-4 m-0 user-select-all">{{ x.project.title }}</h1>
+                                <button
+                                    color="primary"
+                                    mat-button
+                                    type="button"
+                                    (click)="openSwitchProjectDialog(x.projects)"
+                                >
+                                    Switch project
+                                </button>
+                            </div>
+                            @if (x.employees && projectHasDateRange(x.project)) {
+                                <div class="d-flex gap-3 align-items-center">
+                                    <app-month-range-picker
+                                        [date]="displayedDateRange"
+                                        label="Selected range"
+                                        (dateChange)="onChangeDate($event)"
+                                    />
+
+                                    <button
+                                        [disabled]="x.loading"
+                                        color="primary"
+                                        mat-flat-button
+                                        type="button"
+                                        (click)="onExportToCSV(x.dataForCSV, x.project)"
+                                    >
+                                        Export to CSV
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </mat-toolbar-row>
+                </mat-toolbar>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between mat-subtitle-1 m-0 px-3 py-1">
+                <div class="d-flex gap-4">
+                    <div class="d-flex flex-column">
+                        <strong class="title">Project Start</strong>
+                        @if (x.project.startedAt) {
+                            <span class="description">
+                                {{ x.project.startedAt | date: 'LLLL, yyyy' }}
+                            </span>
+                        } @else {
+                            <span class="description">–</span>
+                        }
+                    </div>
+                    <div class="d-flex flex-column">
+                        <strong class="title">Project End</strong>
+                        @if (x.project.finishedAt) {
+                            <span class="description">
+                                {{ x.project.finishedAt | date: 'LLLL, yyyy' }}
+                            </span>
+                        } @else {
+                            <span class="description">–</span>
+                        }
+                    </div>
+                    <div class="d-flex flex-column">
+                        <strong class="title">Project Duration</strong>
+                        <span class="description">
+                            @if (!x.project.finishedAt) {
+                                {{ getNoSetFinishDataMsg(x.project.startedAt) }}
+                            }
+                            @if (x.project.startedAt && x.project.finishedAt) {
+                                @if (projectDurationLabel(x.project.startedAt, x.project.finishedAt); as diff) {
+                                    {{ diff.amount }} {{ diff.label }}
+                                }
+                            }
+                        </span>
+                    </div>
+                </div>
+                <div class="d-flex flex-column align-self-center">
+                    <button
+                        [disabled]="!x.privileges.canEditCell"
+                        color="primary"
+                        mat-button
+                        type="button"
+                        (click)="showProjectEditDialog(x.project)"
+                    >
+                        Edit Project
+                    </button>
+                </div>
+            </div>
+        }
+        @if (!x.loading) {
+            @if (projectHasDateRange(x.project)) {
+                @if (x.dateRange.start <= x.dateRange.end) {
+                    @if (x.employees) {
+                    } @else {
+                        <div class="no-data-plug">
+                            <span>No employees have been assigned to the project yet</span>
+                        </div>
+                    }
+                } @else {
+                    <div class="no-data-plug">
+                        <span class="text-danger">Incorrect date range</span>
+                    </div>
+                }
+            } @else {
+                @if (x.isSuperAdmin) {
+                    <div class="no-data-plug">
+                        <span class="text-danger">Project duration is not set.</span>
+                    </div>
+                }
+                @if (!x.isSuperAdmin) {
+                    <div class="no-data-plug">
+                        <span class="text-danger">Project duration is not set. </span>
+                        <span>Notify admins to set project duration.</span>
+                    </div>
+                }
+            }
+        }
+        @if (x.dateRange.start <= x.dateRange.end) {
+            <div class="d-flex flex-fill flex-column">
+                @switch (x.loading) {
+                    @case (true) {
+                        <div class="indicator">
+                            <app-loading-indicator [isInline]="true" />
+                        </div>
+                    }
+                    @case (false) {
+                        @if (x.employees && projectHasDateRange(x.project)) {
+                            <div>
+                                <table
+                                    [dataSource]="x.rows"
+                                    class="role-table"
+                                    mat-table
+                                    multiTemplateDataRows
+                                >
+                                    <ng-container [matColumnDef]="tableColumn.Role">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Role
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="title-col"
+                                            mat-cell
+                                        >
+                                            {{ element.split(' ')[0] }} <span class="angle-up-icon"></span>
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="footer-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>Total</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container [matColumnDef]="tableColumn.Number">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Employees
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="data-cell"
+                                            mat-cell
+                                        >
+                                            {{ fieldSum('amount', element, x.tableData) | mNumeric }}
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="data-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>{{ fieldTotalSum('amount', x.tableData) | mNumeric }}</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container [matColumnDef]="tableColumn.WorkDays">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Work Days
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="data-cell"
+                                            mat-cell
+                                        >
+                                            {{ fieldSum('days', element, x.tableData) | mNumeric }}
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="data-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>{{ fieldTotalSum('days', x.tableData) | mNumeric }}</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container [matColumnDef]="tableColumn.Hours">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Hours
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="data-cell"
+                                            mat-cell
+                                        >
+                                            {{ fieldSum('days', element, x.tableData) * 8 | mNumeric }}
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="data-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>{{ fieldTotalSum('days', x.tableData) * 8 | mNumeric }}</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container [matColumnDef]="tableColumn.PlannedDays">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Future Days
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="data-cell"
+                                            mat-cell
+                                        >
+                                            {{ fieldSum('plannedDays', element, x.tableData) | mNumeric }}
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="data-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>{{ fieldTotalSum('plannedDays', x.tableData) | mNumeric }}</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container [matColumnDef]="tableColumn.PlannedHours">
+                                        <th
+                                            *matHeaderCellDef
+                                            class="header-cell"
+                                            mat-header-cell
+                                        >
+                                            Future Hours
+                                        </th>
+                                        <td
+                                            *matCellDef="let element"
+                                            class="data-cell"
+                                            mat-cell
+                                        >
+                                            {{ fieldSum('plannedDays', element, x.tableData) * 8 | mNumeric }}
+                                        </td>
+                                        <td
+                                            *matFooterCellDef
+                                            class="data-cell fw-normal"
+                                            mat-footer-cell
+                                        >
+                                            <strong>{{
+                                                fieldTotalSum('plannedDays', x.tableData) * 8 | mNumeric
+                                            }}</strong>
+                                        </td>
+                                    </ng-container>
+                                    <ng-container matColumnDef="expandedDetail">
+                                        <td
+                                            *matCellDef="let element"
+                                            [attr.colspan]="displayedColumns.length"
+                                            class="expanded-cell"
+                                            mat-cell
+                                        >
+                                            @for (subrow of getSubrows(element, x.tableData); track subrow) {
+                                                <tr
+                                                    [attr.class]="
+                                                        subrowMap.get(element) ? 'subrow-expanded' : 'subrow-collapsed'
+                                                    "
+                                                >
+                                                    <td>
+                                                        {{
+                                                            subrow.roleTitle?.split(' ')[1] || 'Role not set'
+                                                                | titlecase
+                                                        }}
+                                                    </td>
+                                                    <td class="sub-cell-data">{{ subrow.amount }}</td>
+                                                    <td class="sub-cell-data">{{ subrow.days | mNumeric }}</td>
+                                                    <td class="sub-cell-data">{{ subrow.days * 8 | mNumeric }}</td>
+                                                    <td class="sub-cell-data">{{ subrow.plannedDays | mNumeric }}</td>
+                                                    <td class="sub-cell-data">
+                                                        {{ subrow.plannedDays * 8 | mNumeric }}
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </td>
+                                    </ng-container>
+                                    <tr
+                                        *matHeaderRowDef="displayedColumns; sticky: true"
+                                        mat-header-row
+                                    ></tr>
+                                    <tr
+                                        *matRowDef="let row; columns: displayedColumns"
+                                        [ngClass]="subrowMap.get(row) ? 'collapsible' : 'expandable'"
+                                        mat-row
+                                        (click)="switchSubrow(row)"
+                                    ></tr>
+                                    <tr
+                                        *matRowDef="let row; columns: ['expandedDetail']"
+                                        class="detail-row"
+                                        mat-row
+                                    ></tr>
+                                    <tr
+                                        *matFooterRowDef="displayedColumns; sticky: true"
+                                        class="footer-shadow"
+                                        mat-footer-row
+                                    ></tr>
+                                </table>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        }
+    </div>
+}

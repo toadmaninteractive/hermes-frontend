@@ -1,0 +1,60 @@
+@if (
+    {
+        selectedRoles: selectedRoles$.asObservable() | async,
+        officeRoles: officeRoles$ | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>Roles of {{ data.office.name }}</h3>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            class="pb-2"
+            subscriptSizing="dynamic"
+        >
+            <input
+                [formControl]="roleFilterControl"
+                autocomplete="off"
+                matInput
+                placeholder="Type in filter..."
+            />
+            @if (roleFilterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="roleFilterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+
+        <mat-selection-list
+            [multiple]="true"
+            color="primary"
+            hideSingleSelectionIndicator
+            (selectionChange)="onChangeRole($event, x.selectedRoles)"
+        >
+            @for (role of x.officeRoles; track role.id) {
+                <mat-list-option
+                    [selected]="x.selectedRoles.has(role.id)"
+                    [value]="role"
+                >
+                    <span class="ms-2 align-middle"> [{{ role.code }}] {{ role.title }} </span>
+                </mat-list-option>
+            }
+        </mat-selection-list>
+    </div>
+}

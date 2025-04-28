@@ -1,0 +1,85 @@
+@if (
+    {
+        currentDate: currentDate$ | async,
+        selectedDate: selectedDate$ | async,
+        showMonthMenu: showMonthMenu$ | async
+    };
+    as x
+) {
+    <mat-form-field
+        [matMenuTriggerFor]="menu"
+        class="month-picker-wrapper"
+        subscriptSizing="dynamic"
+    >
+        <button
+            mat-icon-button
+            matPrefix
+            type="button"
+            (click)="$event.stopPropagation(); onChangeMonth(direction.Left)"
+        >
+            <mat-icon>chevron_left</mat-icon>
+        </button>
+
+        <input
+            [value]="x.selectedDate | date: 'LLLL, yyyy'"
+            class="text-center"
+            matInput
+            readonly
+            style="cursor: pointer"
+            (click)="onToggleMonthMenu(!x.showMonthMenu)"
+        />
+
+        <!-- <mat-select
+            [multiple]="false"
+            [value]="selectTriggerValue.getFullYear() + '-' + month"
+            hideSingleSelectionIndicator
+            (selectionChange)="onSelectMonth(x.selectedDate, $event.value)"
+        >
+            <mat-select-trigger>{{ selectTriggerValue | date: 'LLLL, yyyy' }}</mat-select-trigger>
+            <div
+                class="month-menu"
+                matMenuContent
+            >
+                @for (month of range; track month) {
+                    <mat-option
+                        [class.current-month]="
+                            today.getMonth() === month &&
+                            today.getFullYear() === alterDate(x.selectedDate, month).getFullYear()
+                        "
+                        [class.selected-item]="x.selectedDate.getMonth() === month"
+                        [value]="x.selectedDate.getFullYear() + '-' + month"
+                        class="menu-item"
+                    >
+                        {{ alterDate(x.selectedDate, month) | date: 'LLL' }}
+                    </mat-option>
+                }
+            </div>
+        </mat-select> -->
+
+        <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="$event.stopPropagation(); onChangeMonth(direction.Right)"
+        >
+            <mat-icon>chevron_right</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+            <div class="month-picker-wrapper month-menu">
+                @for (month of range; track month) {
+                    <div
+                        [class.current-month]="
+                            today.getMonth() === month &&
+                            today.getFullYear() === alterDate(x.selectedDate, month).getFullYear()
+                        "
+                        [class.selected-item]="x.selectedDate.getMonth() === month"
+                        class="menu-item"
+                        (click)="onSelectMonth(x.selectedDate, month)"
+                    >
+                        {{ alterDate(x.selectedDate, month) | date: 'LLL' }}
+                    </div>
+                }
+            </div>
+        </mat-menu>
+    </mat-form-field>
+}

@@ -1,0 +1,57 @@
+<div>
+    @if (data) {
+        <h3 mat-dialog-title>Switch to...</h3>
+    }
+    <button
+        [disableRipple]="true"
+        class="close"
+        mat-icon-button
+        type="button"
+        (click)="dialogRef.close()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+</div>
+<div mat-dialog-content>
+    <mat-form-field
+        class="pb-2"
+        subscriptSizing="dynamic"
+    >
+        <input
+            [formControl]="filterControl"
+            matInput
+            placeholder="Type to filter..."
+        />
+        @if (filterControl.value) {
+            <button
+                aria-label="Clear"
+                mat-icon-button
+                matSuffix
+                type="button"
+                (click)="filterControl.patchValue('')"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        }
+    </mat-form-field>
+
+    <mat-selection-list
+        [multiple]="false"
+        color="primary"
+        hideSingleSelectionIndicator
+        (selectionChange)="select($event)"
+    >
+        @for (project of filteredProjects; track project.id) {
+            <mat-list-option
+                [selected]="selectedProject.id === project.id"
+                [value]="project"
+            >
+                <span class="ms-2 align-middle">
+                    {{ project.title }}
+                </span>
+            </mat-list-option>
+        } @empty {
+            <span class="ms-2 align-middle"> No matches found </span>
+        }
+    </mat-selection-list>
+</div>

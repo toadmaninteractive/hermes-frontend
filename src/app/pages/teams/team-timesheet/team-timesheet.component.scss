@@ -1,0 +1,29 @@
+:host {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+}
+
+// .team-table ::ng-deep {
+//     .table-layout-wrapper {
+//         grid-template-rows: auto calc(100vh - (3 * var(--mat-toolbar-standard-height)));
+//     }
+// }
+
+.title-wrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.td-action-btns {
+    &.readonly * {
+        cursor: not-allowed;
+    }
+}

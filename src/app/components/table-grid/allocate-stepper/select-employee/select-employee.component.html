@@ -1,0 +1,63 @@
+@if (
+    {
+        availableEmployees: availableEmployees$.asObservable() | async,
+        employees: filteredEmployees$.asObservable() | async,
+        selected: selected$.asObservable() | async
+    };
+    as x
+) {
+    <div class="user-select-container">
+        <mat-form-field
+            class="pb-2"
+            style="min-width: 350px"
+            subscriptSizing="dynamic"
+        >
+            <input
+                [formControl]="filterControl"
+                matInput
+                placeholder="Type to filter..."
+            />
+            @if (filterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="filterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+        <div class="dialog-scroll-wrapper">
+            @if (x.employees?.length === 0) {
+                <div class="ms-4 f-s-16 font-italic text-muted">No matches found</div>
+            } @else {
+                @if (
+                    {
+                        employees: filteredEmployees$.asObservable() | async,
+                        selected: selected$.asObservable() | async
+                    };
+                    as x
+                ) {
+                    <mat-selection-list
+                        #list
+                        [multiple]="data.multiple"
+                        (selectionChange)="onSelect($event, x.selected)"
+                    >
+                        @for (employee of x.employees; track employee) {
+                            <mat-list-option
+                                [selected]="x.selected.has(employee.id)"
+                                [value]="employee.id"
+                                checkboxPosition="before"
+                            >
+                                <span class="pe-2">{{ employee.name }}</span>
+                                <span class="office-label">{{ employee.officeName }}</span>
+                            </mat-list-option>
+                        }
+                    </mat-selection-list>
+                }
+            }
+        </div>
+    </div>
+}

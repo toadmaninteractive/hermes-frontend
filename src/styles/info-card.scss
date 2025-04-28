@@ -1,0 +1,45 @@
+.info-card {
+    display: flex;
+    flex: 1;
+
+    align-items: stretch;
+
+    gap: 0.5rem 2rem;
+
+    &-title {
+        margin-left: 6px;
+
+        // NOTE: from mat-subtitle-1
+        font:
+            400 16px / 28px Poppins,
+            Helvetica,
+            sans-serif;
+        letter-spacing: 0.009375em;
+
+        user-select: all;
+    }
+
+    &-action-btns {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    &-grid {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        grid-template-columns: 24px 1fr;
+
+        align-items: center;
+
+        &.flag {
+            grid-template-columns: 36px 1fr;
+        }
+
+        .info-card-action-btns {
+            grid-column: 2/-1;
+
+            line-height: 18px;
+        }
+    }
+}

@@ -1,0 +1,209 @@
+@if (
+    {
+        employeesName: employeesName$.asObservable() | async,
+        includeArchived: includeArchived$.asObservable() | async,
+        filteredProjects: filteredProjects$.asObservable() | async,
+        filteredTimeOff: filteredTimeOff$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <div mat-dialog-title>
+            @if (data.cells.length > 1) {
+                Bulk editing:
+                @if (from.getTime() === to.getTime()) {
+                    {{ from | date: 'MMM, d' }}
+                } @else {
+                    {{ from | date: 'MMM, d' }} &ndash; {{ to | date: 'd' }}
+                }
+                @if (weekendCount) {
+                    <div class="mat-body-2 ms-1">
+                        includes {{ weekendCount }}
+                        <ng-container [ngPlural]="weekendCount">
+                            <ng-template ngPluralCase="=1">weekend</ng-template>
+                            <ng-template ngPluralCase="other">weekends</ng-template>
+                        </ng-container>
+                    </div>
+                }
+                <div class="mat-body-2 ms-1">
+                    for {{ x.employeesName?.size }}
+                    <ng-container [ngPlural]="x.employeesName?.size">
+                        <ng-template ngPluralCase="=1">employee</ng-template>
+                        <ng-template ngPluralCase="other">employees</ng-template>
+                    </ng-container>
+                </div>
+            }
+            @if (data.cells.length === 1) {
+                {{ from | date: 'MMMM, d' }}
+                <div class="mat-body-2 ms-1">for {{ data.cells[0].personnelName }}</div>
+            }
+        </div>
+
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <div
+        class="d-flex flex-column gap-3"
+        mat-dialog-content
+    >
+        <mat-form-field subscriptSizing="dynamic">
+            <mat-select
+                [(value)]="occupancy"
+                placeholder="Select occupation"
+            >
+                @if (availableCells.length) {
+                    <mat-option [value]="occupancyEnum.Project">Project</mat-option>
+                }
+                @if (availableCells.length) {
+                    <mat-option [value]="occupancyEnum.Absence">Absence</mat-option>
+                }
+                @if (availableCells.length) {
+                    <mat-option [value]="occupancyEnum.Deallocate">Deallocate</mat-option>
+                }
+                @if (availableCells.length) {
+                    <mat-option [value]="occupancyEnum.Protect">Lock</mat-option>
+                }
+                @if (protectedCells.length) {
+                    <mat-option [value]="occupancyEnum.Unprotect">Unlock</mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+        @switch (occupancy) {
+            @case (occupancyEnum.Project) {
+                <mat-checkbox
+                    [ngModel]="x.includeArchived"
+                    (ngModelChange)="onCheckArchived($event)"
+                >
+                    Include archived
+                </mat-checkbox>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Project</mat-label>
+                    <mat-select
+                        [(ngModel)]="selectedValue"
+                        hideSingleSelectionIndicator
+                        placeholder="Select project"
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                ngModel
+                                noEntriesFoundLabel="No matches"
+                                placeholderLabel="Type in to filter..."
+                                (ngModelChange)="onChangeNeedle($event)"
+                            />
+                        </mat-option>
+                        @for (project of x.filteredProjects; track $index) {
+                            <mat-option [value]="project">
+                                {{ project.title }}
+                                @if (project.isArchived) {
+                                    <span class="archived-mark ms-2">Archived</span>
+                                }
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                @if (isProject(selectedValue)) {
+                    <mat-checkbox
+                        [(ngModel)]="assignToProject"
+                        color="warn"
+                    >
+                        Assign to this project?
+                    </mat-checkbox>
+                }
+            }
+            @case (occupancyEnum.Absence) {
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Absence</mat-label>
+                    <mat-select
+                        [(ngModel)]="selectedValue"
+                        hideSingleSelectionIndicator
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                ngModel
+                                noEntriesFoundLabel="No matches"
+                                placeholderLabel="Type in to filter..."
+                                (ngModelChange)="applyTimeOffFilter($event)"
+                            />
+                        </mat-option>
+                        @for (option of x.filteredTimeOff | keyvalue: orderAsc; track option) {
+                            <mat-option [value]="option.key">
+                                {{ option.value }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            }
+            @case (occupancyEnum.Protect) {
+                <!--                    <mat-form-field  appearance="standard" class="select-field">-->
+                <!--                        <mat-label>Reason</mat-label>-->
+                <!--                        <input [(ngModel)]="comment" matInput placeholder="Type reason..." />-->
+                <!--                    </mat-form-field>-->
+
+                <span>
+                    {{ availableCells.length }} {{ availableCells.length > 1 ? 'cells' : 'cell' }} will be locked
+                </span>
+            }
+            @case (occupancyEnum.Unprotect) {
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Reason</mat-label>
+                    <input
+                        [(ngModel)]="comment"
+                        matInput
+                        placeholder="Type reason..."
+                    />
+                    @if (comment) {
+                        <button
+                            aria-label="Clear"
+                            mat-icon-button
+                            matSuffix
+                            type="button"
+                            (click)="clearInput()"
+                        >
+                            <mat-icon>close</mat-icon>
+                        </button>
+                    }
+                </mat-form-field>
+
+                <span>
+                    {{ protectedCells.length }} {{ protectedCells.length > 1 ? 'cells' : 'cell' }} will be unlocked
+                </span>
+            }
+        }
+        @if (data.cells.length > 1) {
+            @if (weekendCount) {
+                <mat-checkbox [(ngModel)]="overwriteWeekend">Apply to weekends</mat-checkbox>
+            }
+
+            <mat-checkbox [(ngModel)]="applyAbsence">Apply to absence days</mat-checkbox>
+        }
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(null)"
+        >
+            Cancel
+        </button>
+        <button
+            [disabled]="!canApply()"
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(occupancy)"
+        >
+            Apply
+        </button>
+    </div>
+}

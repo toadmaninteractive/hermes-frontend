@@ -1,0 +1,62 @@
+@if (
+    {
+        roles: roles$.asObservable() | async,
+        role: role$.asObservable() | async
+    };
+    as x
+) {
+    <mat-form-field
+        class="role-selector-wrapper"
+        subscriptSizing="dynamic"
+    >
+        <mat-select
+            [compareWith]="compare"
+            [value]="x.role"
+            hideSingleSelectionIndicator
+            panelClass="custom-panel-class"
+            (selectionChange)="onSelectionChange($event.value)"
+        >
+            @if (x.role) {
+                <mat-select-trigger>
+                    <div class="filter-wrap">
+                        @if (x.role === 'all') {
+                            <mat-icon class="align-middle">public</mat-icon>
+                        }
+                        @if (x.role === 'unassigned') {
+                            <mat-icon class="align-middle">person_outline</mat-icon>
+                        }
+                        <span class="ms-1 align-middle">
+                            @switch (x.role) {
+                                @case ('all') {
+                                    All roles
+                                }
+                                @case ('unassigned') {
+                                    Unassigned role
+                                }
+                                @default {
+                                    {{ $any(x.role).title }}
+                                }
+                            }
+                        </span>
+                    </div>
+                </mat-select-trigger>
+            }
+            <mat-option value="all">
+                <!-- <mat-icon class="align-middle">public</mat-icon> -->
+                <span class="align-middle">All roles</span>
+            </mat-option>
+            <mat-option value="unassigned">
+                <!-- <mat-icon class="align-middle">person_outline</mat-icon> -->
+                <span class="align-middle">Unassigned role</span>
+            </mat-option>
+            <mat-divider />
+            @for (role of x.roles; track role) {
+                <mat-option [value]="role">
+                    <div class="d-inline-flex align-items-center">
+                        <span>{{ role.title }}</span>
+                    </div>
+                </mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+}

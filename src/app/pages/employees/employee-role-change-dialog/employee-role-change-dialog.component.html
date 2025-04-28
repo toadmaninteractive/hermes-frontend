@@ -1,0 +1,71 @@
+@if ({ filteredRoles: filteredRoles$.asObservable() | async }; as x) {
+    <div>
+        @if (data.header) {
+            <h3 mat-dialog-title>
+                {{ data.header }}
+            </h3>
+        }
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            class="pb-2"
+            subscriptSizing="dynamic"
+        >
+            <input
+                [formControl]="filterControl"
+                matInput
+                placeholder="Type to filter..."
+            />
+            @if (filterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="filterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+
+        <div class="dialog-scroll-wrapper">
+            <mat-selection-list
+                [multiple]="false"
+                color="primary"
+                hideSingleSelectionIndicator
+                (selectionChange)="onSelectRole($event)"
+            >
+                @if (x.filteredRoles?.length) {
+                    @for (role of x.filteredRoles; track role) {
+                        <mat-list-option
+                            [selected]="role.title === data.currentRole || role.id === data.currentRoleId"
+                            [value]="role"
+                        >
+                            {{ role.title }}
+                            @if (!data.allowedRoles.has(role.id)) {
+                                <i>&nbsp;(not allowed in this office)</i>
+                            }
+                        </mat-list-option>
+                    }
+                } @else {
+                    <div
+                        class="d-inline-flex align-items-center menu-item"
+                        matListItem
+                    >
+                        No matches found
+                    </div>
+                }
+            </mat-selection-list>
+        </div>
+    </div>
+}

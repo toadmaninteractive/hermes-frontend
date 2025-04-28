@@ -1,0 +1,235 @@
+@if (
+    {
+        activeType: activeType$.asObservable() | async,
+        data: data$.asObservable() | async,
+        errorLogs: errorLogs$.asObservable() | async,
+        logs: filteredLogs$.asObservable() | async,
+        officeName: officeName$.asObservable() | async,
+        reportDate: reportDate$.asObservable() | async,
+        omittedEmployees: omittedEmployees$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <mat-toolbar-row>
+                    <div class="d-flex flex-fill align-items-center justify-content-between">
+                        <h1 class="d-flex gap-2">
+                            <span>Report delivery details</span>
+                            @if (x.officeName) {
+                                <mat-divider
+                                    [vertical]="true"
+                                    class="text-muted"
+                                />
+                                <span>
+                                    {{ x.officeName }}
+                                </span>
+                            }
+                            @if (x.reportDate) {
+                                <mat-divider
+                                    [vertical]="true"
+                                    class="text-muted"
+                                />
+                                <span>
+                                    {{ x.reportDate | date: 'MMMM YYYY' }}
+                                </span>
+                            }
+                        </h1>
+                        <mat-form-field
+                            floatLabel="auto"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                #filter
+                                autocomplete="off"
+                                matInput
+                                placeholder="Type to filter..."
+                                (keyup)="onFilterChange(filter.value)"
+                            />
+                        </mat-form-field>
+                    </div>
+                </mat-toolbar-row>
+
+                @if (x.omittedEmployees.length) {
+                    <mat-toolbar-row>
+                        <h5 class="mat-subtitle-1 m-0">Excluded employees:&nbsp;</h5>
+                        <div class="mat-body-1 m-0">
+                            @if (x.omittedEmployees; as affects) {
+                                @for (user of affects | slice: 0 : 3; track user; let i = $index) {
+                                    <ng-container class="affects-list">
+                                        <a
+                                            [href]="
+                                                '/employees/' +
+                                                $any(user).username +
+                                                '/' +
+                                                x.reportDate.getFullYear() +
+                                                '/' +
+                                                (x.reportDate.getMonth() + 1)
+                                            "
+                                            target="_blank"
+                                            >{{ $any(user).name }}</a
+                                        >
+                                        @if (i !== (affects | slice: 0 : 3).length - 1) {
+                                            <span>,&nbsp;</span>
+                                        }
+                                    </ng-container>
+                                }
+
+                                @if (showFullList) {
+                                    <ng-container
+                                        [@fadeAnimation]="showFullList"
+                                        class="affects-list"
+                                    >
+                                        <span>,&nbsp;</span>
+                                        @for (user of affects | slice: 3; track user; let i = $index) {
+                                            <a
+                                                [href]="
+                                                    '/employees/' +
+                                                    $any(user).username +
+                                                    '/' +
+                                                    x.reportDate.getFullYear() +
+                                                    '/' +
+                                                    (x.reportDate.getMonth() + 1)
+                                                "
+                                                target="_blank"
+                                                >{{ $any(user).name }}</a
+                                            >
+                                            @if (i !== (affects | slice: 3).length - 1) {
+                                                <span class="comma">,&nbsp;</span>
+                                            }
+                                        }
+                                    </ng-container>
+                                }
+
+                                @if (affects.length - 3 > 0) {
+                                    <span
+                                        [class.more-users_open]="showFullList"
+                                        class="more-users"
+                                        (click)="switchShowMode()"
+                                    >
+                                        {{ showFullList ? '-' : '+' }}{{ affects.length - 3 }}&nbsp;employees
+                                    </span>
+                                }
+                            }
+                        </div>
+                    </mat-toolbar-row>
+                }
+                @if (x.data) {
+                    <mat-toolbar-row class="align-items-center">
+                        @if (
+                            x.data?.stats?.total_succeeded !== undefined ||
+                            x.data?.stats?.total_ignored !== undefined ||
+                            x.data?.stats?.total_errors !== undefined
+                        ) {
+                            <mat-button-toggle-group
+                                [value]="x.activeType"
+                                aria-label="Filter Type"
+                                hideSingleSelectionIndicator
+                                name="filterType"
+                                (change)="onTypeChange($event.value)"
+                            >
+                                <mat-button-toggle [value]="FilterType.All">
+                                    <span>Total: {{ numberSuccess + numberErrors + numberIgnored }}</span>
+                                </mat-button-toggle>
+                                @if (x.data?.stats?.total_succeeded !== undefined) {
+                                    <mat-button-toggle
+                                        [disabled]="!x.data?.stats?.total_succeeded"
+                                        [value]="FilterType.Success"
+                                    >
+                                        <mat-icon class="text-success me-1 align-middle"> check_circle </mat-icon>
+                                        <span>Total succeeded: {{ numberSuccess }}</span>
+                                    </mat-button-toggle>
+                                }
+                                @if (x.data?.stats?.total_ignored !== undefined) {
+                                    <mat-button-toggle
+                                        [disabled]="!x.data?.stats?.total_ignored"
+                                        [value]="FilterType.Ignored"
+                                    >
+                                        <mat-icon class="text-muted me-1 align-middle"> report_problem </mat-icon>
+                                        <span>Total ignored: {{ numberIgnored }}</span>
+                                    </mat-button-toggle>
+                                }
+
+                                @if (x.data?.stats?.total_errors !== undefined) {
+                                    <mat-button-toggle
+                                        [disabled]="!x.data?.stats?.total_errors"
+                                        [value]="FilterType.Error"
+                                    >
+                                        <mat-icon class="text-danger me-1 align-middle">error_outline</mat-icon>
+                                        <span>Total errors: {{ numberErrors }}</span>
+                                    </mat-button-toggle>
+                                }
+                            </mat-button-toggle-group>
+                        }
+                    </mat-toolbar-row>
+                }
+            </mat-toolbar>
+        </div>
+
+        <div class="content-logs">
+            @if (x.logs?.length) {
+                <div class="dialog-list__wrapper scroll-list-wrapper">
+                    @for (log of x.logs; track log) {
+                        <dl class="dialog-list">
+                            <dt class="dialog-list__date">{{ log.created_at | date: 'dd MMM YYYY HH:mm:ss' }}</dt>
+                            <dd class="dialog-list__row">
+                                <span
+                                    [class.text-danger]="!log.success"
+                                    [class.text-success]="log.success"
+                                >
+                                    {{ log.success ? 'Success' : 'Unsuccessful' }}
+                                </span>
+                                <br />
+                                @if (log.message) {
+                                    <span>{{ log.message }}</span>
+                                }
+                                <br />
+                                @if (log.errors?.length === 1) {
+                                    <span>Error: {{ log.errors[0] }}</span>
+                                }
+                                @if (log.errors?.length > 1) {
+                                    <span>Errors: </span>
+                                    <ul>
+                                        @for (error of log.errors; track error) {
+                                            @if (!!error) {
+                                                <li>{{ error }}</li>
+                                            }
+                                        }
+                                    </ul>
+                                }
+                            </dd>
+                        </dl>
+                    }
+                </div>
+            } @else {
+                <div class="scroll-list-wrapper">
+                    <div class="plug">
+                        <span class="plug__text"> No records found </span>
+                    </div>
+                </div>
+            }
+            <div class="scroll-list-wrapper">
+                @if (array.from(x.errorLogs?.keys())?.length === 0) {
+                    <div class="plug"><span class="plug__text">Good job!</span></div>
+                }
+                @if (array.from(x.errorLogs?.keys())?.length !== 0) {
+                    <div class="error-header">
+                        <span class="title">Errors</span>
+                        <span class="description">Description</span>
+                    </div>
+                    <ul class="short-list">
+                        @for (v of x.errorLogs | keyvalue; track v) {
+                            <li>
+                                <div class="log-row">
+                                    <div class="errors-counter">{{ v.value.length }}</div>
+                                    <div class="log-message"><span [innerHTML]="v.value[0]"></span></div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,108 @@
+@if (
+    {
+        filteredProjects: filteredProjects$.asObservable() | async,
+        includeArchived: includeArchived$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        @if (data?.header) {
+            <h3 mat-dialog-title>{{ data.header }}</h3>
+        }
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            class="pb-2"
+            subscriptSizing="dynamic"
+        >
+            <input
+                [formControl]="filterControl"
+                matInput
+                placeholder="Type to filter..."
+            />
+            @if (filterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="filterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+        <mat-checkbox
+            [disableRipple]="true"
+            [ngModel]="x.includeArchived"
+            class="mb-2"
+            (ngModelChange)="onCheckArchived($event)"
+        >
+            Include archived
+        </mat-checkbox>
+
+        <div class="dialog-scroll-wrapper">
+            <mat-selection-list
+                [multiple]="false"
+                color="primary"
+                hideSingleSelectionIndicator
+                (selectionChange)="onSelectProject($event)"
+            >
+                @if (x.filteredProjects.length) {
+                    @for (project of x.filteredProjects; track project) {
+                        <mat-list-option
+                            [selected]="data.projectAllocatedId === project.id"
+                            [value]="project"
+                        >
+                            <div class="d-inline-flex align-items-center">
+                                <div
+                                    [style.background-color]="hexToRgbA(project?.color || '#CCCCCC', 0.75)"
+                                    [style.border-color]="project.color"
+                                    class="legend-item align-text-top"
+                                >
+                                    {{ project.title | uppercase | slice: 0 : 1 }}
+                                </div>
+
+                                <div class="ms-2 align-middle">{{ project.title }}</div>
+
+                                @if (project.isArchived) {
+                                    <span class="archived-mark ms-2">Archived</span>
+                                }
+                            </div>
+                        </mat-list-option>
+                    }
+                } @else {
+                    <div
+                        class="d-inline-flex align-items-center menu-item"
+                        matListItem
+                    >
+                        No matches
+                    </div>
+                }
+            </mat-selection-list>
+        </div>
+    </div>
+
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            color="warn"
+            mat-raised-button
+            type="button"
+            (click)="onDeallocate()"
+        >
+            Deallocate
+        </button>
+    </div>
+}

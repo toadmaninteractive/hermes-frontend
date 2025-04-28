@@ -1,0 +1,247 @@
+@if (
+    {
+        canEditCell: canEditCell$.asObservable() | async,
+        filteredIdSet: filteredIdSet$.asObservable() | async,
+        monthDays: monthDays$.asObservable() | async,
+        projects: projects$.asObservable() | async,
+        projectsWithDays: projectsWithDays$.asObservable() | async,
+        projectColors: projectsColorMap$.asObservable() | async,
+        timesheet: timesheet$.asObservable() | async,
+        selectedCells: selectedCells$.asObservable() | async,
+        selectedCellsId: selectedCellsId$.asObservable() | async
+    };
+    as x
+) {
+    @if (loading) {
+        <div class="overlay">
+            <div class="overlay__inner">
+                <div class="overlay__content">
+                    <app-mosaic-loader />
+                </div>
+            </div>
+        </div>
+    }
+    @if (!loading) {
+        @if (x.timesheet) {
+            <div
+                #tableContainer
+                class="table-layout-wrapper"
+                tabindex="-1"
+                (keyup)="onKeyUpPressed($event)"
+            >
+                <div
+                    @smoothOpacity
+                    class="w-100 d-inline-flex align-items-center justify-content-between gap-3 p-3 pb-2"
+                >
+                    <div>
+                        @if (x.timesheet.length) {
+                            <mat-form-field
+                                class="filter-string"
+                                subscriptSizing="dynamic"
+                            >
+                                <input
+                                    #filter
+                                    [formControl]="filterControl"
+                                    autocomplete="off"
+                                    matInput
+                                    placeholder="Type to filter..."
+                                />
+                                @if (filterControl.value) {
+                                    <button
+                                        aria-label="Clear"
+                                        mat-icon-button
+                                        matSuffix
+                                        type="button"
+                                        (click)="filterControl.patchValue('')"
+                                    >
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                }
+                            </mat-form-field>
+                        }
+                    </div>
+                    <div class="flex-fill">
+                        <app-project-legend
+                            [projectsWithDays]="x.projectsWithDays"
+                            (selectProject)="onSelectProjects($event)"
+                        />
+                    </div>
+                    <ng-container [ngTemplateOutlet]="menuTemplate" />
+                </div>
+                @if (x.timesheet.length) {
+                    <div
+                        #tableWrapper
+                        class="w-100 position-relative overflow-auto"
+                        with-scroll-top
+                    >
+                        <table
+                            [class.readonly]="!x.canEditCell"
+                            class="custom-table"
+                            (clickOutside)="endRangeSelection($any($event))"
+                        >
+                            <thead class="custom-table__header custom-table__header_sticky">
+                                <tr class="head-row">
+                                    <th class="head-row__cell">Employee</th>
+                                    @for (day of x.monthDays; track day) {
+                                        <th
+                                            [class.cell-today]="
+                                                day.getDate() === today.getDate() &&
+                                                day.getMonth() === today.getMonth() &&
+                                                day.getFullYear() === today.getFullYear()
+                                            "
+                                            class="head-row__cell head-row__cell_responsive"
+                                            (click)="selectColumn($event, x.selectedCells, day, x.canEditCell)"
+                                        >
+                                            {{ day.getDate() }}
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+                            @if (x.filteredIdSet.size) {
+                                <tbody class="custom-table__body">
+                                    @for (employeeTimesheet of x.timesheet; track employeeTimesheet) {
+                                        @if (
+                                            { account: employeesMap.get(employeeTimesheet.personnelId) };
+                                            as employee
+                                        ) {
+                                            <tr
+                                                [@visible]="x.filteredIdSet.has(employeeTimesheet.personnelId)"
+                                                [id]="'emp-' + employeeTimesheet.personnelId"
+                                                class="body-row"
+                                            >
+                                                @if (x.filteredIdSet.has(employeeTimesheet.personnelId)) {
+                                                    <td
+                                                        [class.excluded-employee]="
+                                                            excludedEmployeeFromReport.has(
+                                                                employeeTimesheet.personnelId
+                                                            )
+                                                        "
+                                                        [class.with-no-role]="!employee.account.roleId"
+                                                        class="body-row__cell body-row__cell_sticky"
+                                                        (click)="
+                                                            selectRow(
+                                                                $event,
+                                                                x.selectedCells,
+                                                                employeeTimesheet.personnelId,
+                                                                x.canEditCell
+                                                            )
+                                                        "
+                                                    >
+                                                        <ng-container
+                                                            [ngTemplateOutlet]="employeeColumn"
+                                                            [ngTemplateOutletContext]="{
+                                                                employee: employee.account,
+                                                                linkedList: employeeTimesheet.linkedToProjects,
+                                                                vismaTooltip: excludedEmployeeFromReport.has(
+                                                                    employeeTimesheet.personnelId
+                                                                )
+                                                                    ? 'Excluded from Visma reports'
+                                                                    : null
+                                                            }"
+                                                        />
+                                                    </td>
+                                                }
+                                                @for (cell of employeeTimesheet.cells; track cell) {
+                                                    @if ({ asyncCell: cellsMap.get(cell.id) }; as y) {
+                                                        @if (x.filteredIdSet.has(employeeTimesheet.personnelId)) {
+                                                            <td
+                                                                [attr.title]="
+                                                                    y.asyncCell?.projectName ||
+                                                                    (y.asyncCell?.timeOff &&
+                                                                        timeOffDescription(y.asyncCell?.timeOff))
+                                                                "
+                                                                [class.danger]="y.asyncCell.timeOff"
+                                                                [class.selected]="x.selectedCellsId.has(y.asyncCell.id)"
+                                                                [class.weekend]="isWeekend(cell.cellDate)"
+                                                                [id]="cell.id"
+                                                                [style.background-color]="
+                                                                    x.projectColors.get(y.asyncCell.projectId)
+                                                                "
+                                                                [style.opacity]="
+                                                                    selectedProjectsId.size === 0 ||
+                                                                    selectedProjectsId.has(y.asyncCell.projectId)
+                                                                        ? 1
+                                                                        : 0.2
+                                                                "
+                                                                class="body-row__cell body-row__cell_project body-row__cell_responsive"
+                                                                (contextmenu)="
+                                                                    onRightClick(
+                                                                        x.selectedCells,
+                                                                        y.asyncCell,
+                                                                        x.canEditCell
+                                                                    )
+                                                                "
+                                                                (dblclick)="onDblClick(x.selectedCells, x.canEditCell)"
+                                                                (mousedown)="
+                                                                    onMouseDown(
+                                                                        $event,
+                                                                        y.asyncCell,
+                                                                        x.selectedCells,
+                                                                        x.canEditCell
+                                                                    )
+                                                                "
+                                                                (mouseenter)="
+                                                                    selectCellRange(
+                                                                        $event,
+                                                                        y.asyncCell,
+                                                                        x.selectedCells,
+                                                                        x.canEditCell
+                                                                    )
+                                                                "
+                                                                (mouseup)="
+                                                                    onMouseUp(
+                                                                        $event,
+                                                                        x.selectedCells,
+                                                                        y.asyncCell,
+                                                                        x.canEditCell
+                                                                    )
+                                                                "
+                                                            >
+                                                                @if (y.asyncCell.projectName) {
+                                                                    {{ y.asyncCell.projectName | slice: 0 : 1 }}
+                                                                }
+                                                                @if (y.asyncCell.timeOff) {
+                                                                    {{
+                                                                        timeOffDescription(y.asyncCell.timeOff)
+                                                                            | slice: 0 : 1
+                                                                    }}
+                                                                }
+                                                                @if (y.asyncCell.isProtected) {
+                                                                    <mat-icon
+                                                                        class="protect-icon"
+                                                                        inline
+                                                                        >lock</mat-icon
+                                                                    >
+                                                                }
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            } @else {
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            class="text-center"
+                                            colspan="31"
+                                            height="200"
+                                        >
+                                            <span class="no-rows__msg">No matches for filter criteria</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            }
+                        </table>
+                    </div>
+                } @else {
+                    <div class="no-rows">
+                        <span class="no-rows__msg"> No employees to show </span>
+                    </div>
+                }
+            </div>
+        }
+    }
+}

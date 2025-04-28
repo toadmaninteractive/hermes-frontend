@@ -1,0 +1,77 @@
+/// NOTE: We use bootstrap color variables (scss) to create color palettes for Material 2.
+/// This way we ensure consistency of colors in dark and light themes.
+///
+/// @link https://v15.material.angular.io/guide/theming#themes
+/// @link https://getbootstrap.com/docs/5.3/customize/color/
+///
+$blue-palette: (
+    100: $blue-100,
+    200: $blue-200,
+    300: $blue-300,
+    400: $blue-400,
+    500: $blue-500,
+    600: $blue-600,
+    700: $blue-700,
+    800: $blue-800,
+    900: $blue-900,
+    contrast: (
+        50: rgba(0 0 0 / 87%),
+        100: rgba(0 0 0 / 87%),
+        200: rgba(0 0 0 / 87%),
+        300: rgba(0 0 0 / 87%),
+        400: white,
+        500: white,
+        600: white,
+        700: white,
+        800: white,
+        900: white
+    )
+);
+
+$teal-palette: (
+    100: $teal-100,
+    200: $teal-200,
+    300: $teal-300,
+    400: $teal-400,
+    500: $teal-500,
+    600: $teal-600,
+    700: $teal-700,
+    800: $teal-800,
+    900: $teal-900,
+    contrast: (
+        50: rgba(0 0 0 / 87%),
+        100: rgba(0 0 0 / 87%),
+        200: rgba(0 0 0 / 87%),
+        300: rgba(0 0 0 / 87%),
+        400: rgba(0 0 0 / 87%),
+        500: rgba(0 0 0),
+        600: rgba(0 0 0),
+        700: white,
+        800: white,
+        900: white
+    )
+);
+
+$red-palette: (
+    100: $red-100,
+    200: $red-200,
+    300: $red-300,
+    400: $red-400,
+    500: $red-500,
+    600: $red-600,
+    700: $red-700,
+    800: $red-800,
+    900: $red-900,
+    contrast: (
+        50: rgba(0 0 0 / 87%),
+        100: rgba(0 0 0 / 87%),
+        200: rgba(0 0 0 / 87%),
+        300: rgba(0 0 0 / 87%),
+        400: rgba(0 0 0 / 87%),
+        500: white,
+        600: white,
+        700: white,
+        800: white,
+        900: white
+    )
+);

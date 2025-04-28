@@ -1,0 +1,249 @@
+@if (
+    {
+        employeesName: employeesName$.asObservable() | async,
+        updatedEmployees: updateEmployees$.asObservable() | async,
+        monthDays: monthDays$.asObservable() | async,
+        projectColors: projectColors$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <div mat-dialog-title>
+            @if (cells.length > 1) {
+                <h3>
+                    Bulk editing:
+                    @if (from.getTime() === to.getTime()) {
+                        {{ from | date: 'MMM, d' }}
+                    } @else {
+                        {{ from | date: 'MMM, d' }} &ndash; {{ to | date: 'd' }}
+                    }
+                </h3>
+                @if (weekendCount) {
+                    <div class="f-s-14">
+                        includes {{ weekendCount }}
+                        <ng-container [ngPlural]="weekendCount">
+                            <ng-template ngPluralCase="=1">weekend</ng-template>
+                            <ng-template ngPluralCase="other">weekends</ng-template>
+                        </ng-container>
+                    </div>
+                }
+                <div class="f-s-14">
+                    for {{ x.updatedEmployees?.size }}
+                    <ng-container [ngPlural]="x.updatedEmployees?.size">
+                        <ng-template ngPluralCase="=1">employee</ng-template>
+                        <ng-template ngPluralCase="other">employees</ng-template>
+                    </ng-container>
+                </div>
+            }
+            @if (cells.length === 1) {
+                <h3>{{ from | date: 'MMMM, d' }}</h3>
+                <span class="f-s-14"> for {{ cells[0].personnelName }} </span>
+            }
+        </div>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div
+        class="d-flex flex-column gap-3"
+        mat-dialog-content
+    >
+        <div
+            #tableWrapper
+            class="table-wrapper"
+        >
+            <table class="custom-table">
+                <thead class="custom-table__header custom-table__header_sticky">
+                    <tr class="head-row">
+                        <th class="head-row__cell">Employee</th>
+                        @for (day of x.monthDays; track day) {
+                            <th class="head-row__cell head-row__cell_responsive">
+                                {{ day.getDate() }}
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="custom-table__body">
+                    @for (employee of employeesArray; track employee; let i = $index) {
+                        <ng-container>
+                            <tr
+                                [id]="'emp-' + employee.id"
+                                class="body-row"
+                            >
+                                <td
+                                    [class.with-no-role]="!employee.roleId"
+                                    class="body-row__cell body-row__cell_sticky"
+                                >
+                                    <span class="employee-name">{{ employee.name }}</span>
+                                </td>
+                                @for (day of x.monthDays; track day; let j = $index) {
+                                    @if (
+                                        {
+                                            sourceCell: getSourceCell(i, j),
+                                            targetCell: getTargetCell(i, j)
+                                        };
+                                        as y
+                                    ) {
+                                        <ng-container
+                                            [ngTemplateOutlet]="cell"
+                                            [ngTemplateOutletContext]="{ y: y, x: x }"
+                                        />
+                                    }
+                                }
+                            </tr>
+                        </ng-container>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (weekendCount) {
+            <mat-checkbox [(ngModel)]="overwriteWeekend">Apply to weekends</mat-checkbox>
+        }
+        @if (absenceCount) {
+            <mat-checkbox [(ngModel)]="applyAbsence">Apply to absence days</mat-checkbox>
+        }
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(null)"
+            (keyup.escape)="closeDialog(null)"
+        >
+            Cancel
+        </button>
+        <button
+            #applyButton
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(true)"
+            (keyup.enter)="closeDialog(true)"
+        >
+            Apply
+        </button>
+    </div>
+}
+
+<ng-template
+    #absenceCell
+    let-x="x"
+    let-y="y"
+>
+    @if (applyAbsence) {
+        <ng-container
+            [ngTemplateOutlet]="cellValue"
+            [ngTemplateOutletContext]="{ cell: y.sourceCell || y.targetCell, y: y, x: x, dimmed: false }"
+        />
+    }
+
+    @if (!applyAbsence) {
+        <ng-container
+            [ngTemplateOutlet]="cellValue"
+            [ngTemplateOutletContext]="{ cell: y.targetCell, y: y, x: x, dimmed: true }"
+        />
+    }
+</ng-template>
+
+<ng-template
+    #cellValue
+    let-cell="cell"
+    let-dimmed="dimmed"
+    let-x="x"
+    let-y="y"
+>
+    @if (cell.projectName || cell.timeOff) {
+        <td
+            [class.bg-dashed]="isWeekend(y.targetCell?.cellDate)"
+            [class.bg-dimmed]="cell === y.targetCell"
+            [class.danger]="cell.timeOff"
+            [style.background-color]="x.projectColors.get(cell.projectId)"
+            class="body-row__cell body-row__cell_project body-row__cell_responsive"
+        >
+            @if (cell.projectName) {
+                {{ cell.projectName | slice: 0 : 1 }}
+            }
+            @if (cell.timeOff) {
+                {{ timeOffDescription(cell.timeOff) | slice: 0 : 1 }}
+            }
+        </td>
+    }
+
+    @if (!cell.projectName && !cell.timeOff) {
+        <td
+            [class.bg-dashed]="isWeekend(y.targetCell?.cellDate)"
+            [class.bg-dimmed]="dimmed"
+            class="body-row__cell body-row__cell_project body-row__cell_responsive"
+        ></td>
+    }
+</ng-template>
+
+<ng-template
+    #cell
+    let-x="x"
+    let-y="y"
+>
+    @if (!y.targetCell.isProtected) {
+        @if (isWeekend(y.targetCell?.cellDate)) {
+            @if (overwriteWeekend) {
+                @if (y.targetCell.timeOff) {
+                    <ng-container
+                        [ngTemplateOutlet]="absenceCell"
+                        [ngTemplateOutletContext]="{ y: y, x: x }"
+                    />
+                }
+                @if (!y.targetCell.timeOff) {
+                    <ng-container
+                        [ngTemplateOutlet]="cellValue"
+                        [ngTemplateOutletContext]="{ cell: y.sourceCell || y.targetCell, y: y, x: x, dimmed: false }"
+                    />
+                }
+            }
+            @if (!overwriteWeekend) {
+                @if (y.targetCell.timeOff) {
+                    <ng-container
+                        [ngTemplateOutlet]="absenceCell"
+                        [ngTemplateOutletContext]="{ y: y, x: x }"
+                    />
+                }
+                @if (!y.targetCell.timeOff) {
+                    <ng-container
+                        [ngTemplateOutlet]="cellValue"
+                        [ngTemplateOutletContext]="{ cell: y.targetCell || y.sourceCell, y: y, x: x, dimmed: true }"
+                    />
+                }
+            }
+        }
+        @if (!isWeekend(y.targetCell?.cellDate)) {
+            @if (y.targetCell.timeOff) {
+                <ng-container
+                    [ngTemplateOutlet]="absenceCell"
+                    [ngTemplateOutletContext]="{ y: y, x: x }"
+                />
+            }
+            @if (!y.targetCell.timeOff) {
+                <ng-container
+                    [ngTemplateOutlet]="cellValue"
+                    [ngTemplateOutletContext]="{ cell: y.sourceCell || y.targetCell, y: y, x: x, dimmed: false }"
+                />
+            }
+        }
+    }
+
+    @if (y.targetCell.isProtected) {
+        <ng-container
+            [ngTemplateOutlet]="cellValue"
+            [ngTemplateOutletContext]="{ cell: y.targetCell || y.sourceCell, y: y, x: x, dimmed: true }"
+        />
+    }
+</ng-template>

@@ -1,0 +1,14 @@
+<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+ <title>Stockholm-icons / Shopping / Sort1</title>
+ <desc>Created with Sketch.</desc>
+
+ <g>
+  <title>Layer 1</title>
+  <g transform="rotate(180, 12, 12)" fill-rule="evenodd" fill="none" id="Stockholm-icons-/-Shopping-/-Sort1">
+   <rect height="24" width="24" y="0" x="0" id="bound"/>
+   <rect rx="1.5" height="3" width="16" y="5" x="4" fill="#000000" id="Rectangle-8"/>
+   <path opacity="0.3" fill="#000000" id="Combined-Shape" d="m7.5,11l9,0c0.82843,0 1.5,0.67157 1.5,1.5c0,0.82843 -0.67157,1.5 -1.5,1.5l-9,0c-0.82843,0 -1.5,-0.67157 -1.5,-1.5c0,-0.82843 0.67157,-1.5 1.5,-1.5zm3,6l3,0c0.82843,0 1.5,0.67157 1.5,1.5c0,0.82843 -0.67157,1.5 -1.5,1.5l-3,0c-0.82843,0 -1.5,-0.67157 -1.5,-1.5c0,-0.82843 0.67157,-1.5 1.5,-1.5z"/>
+  </g>
+ </g>
+</svg>

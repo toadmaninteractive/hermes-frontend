@@ -1,0 +1,74 @@
+@if ({ filteredOffices: filteredOffices$.asObservable() | async }; as x) {
+    <div>
+        @if (data?.header) {
+            <h3 mat-dialog-title>
+                {{ data.header }}
+            </h3>
+        }
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            class="pb-2"
+            subscriptSizing="dynamic"
+        >
+            <input
+                [formControl]="filterControl"
+                matInput
+                placeholder="Type to filter..."
+            />
+            @if (filterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="filterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+
+        <mat-selection-list
+            [multiple]="false"
+            color="primary"
+            hideSingleSelectionIndicator
+            (selectionChange)="select($event)"
+        >
+            @for (office of x.filteredOffices; track office.id) {
+                <mat-list-option
+                    [selected]="office.id === data.officeId"
+                    [value]="office"
+                >
+                    @if (office?.countryAlpha2) {
+                        <app-country-flag
+                            [alt]="office.countryName + ' flag'"
+                            [code]="office?.countryAlpha2"
+                            class="align-items-center"
+                        />
+                    } @else {
+                        <span
+                            [cacheSVG]="true"
+                            [inlineSVG]="'./assets/media/svg/icons/Other/earth.svg'"
+                            class="svg-icon svg-icon-xl"
+                        ></span>
+                    }
+                    <span class="ms-2 align-middle">
+                        {{ office.name }}
+                    </span>
+                </mat-list-option>
+            } @empty {
+                <span class="ms-2 align-middle"> No matches found </span>
+            }
+        </mat-selection-list>
+    </div>
+}

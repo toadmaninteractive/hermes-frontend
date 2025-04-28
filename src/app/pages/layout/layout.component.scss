@@ -1,0 +1,60 @@
+:host {
+    display: contents;
+}
+
+// TODO: need a discuss
+mat-list-item {
+    // display: flex;
+    // align-items: center;
+    border-radius: 0 !important;
+
+    // &.active {
+    //     background-color: var(--mat-option-selected-state-label-text-color) !important;
+    // }
+}
+
+.small-size-content {
+    height: calc(100vh - var(--mat-toolbar-standard-height));
+}
+
+.brand {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    line-height: 34px;
+
+    .brand-logo {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+
+        img {
+            width: 23px;
+            height: 23px;
+        }
+    }
+
+    .logo {
+        font-weight: 500;
+        font-size: 22px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+
+        color: var(--mat-toolbar-container-text-color, white);
+    }
+
+    .version {
+        align-self: flex-start;
+        padding-left: 4px;
+
+        font-size: 13px;
+        line-height: 28px;
+
+        font-family: Roboto, Helvetica, sans-serif;
+
+        color: var(--mat-toolbar-container-text-color, white);
+        opacity: 0.8;
+    }
+}

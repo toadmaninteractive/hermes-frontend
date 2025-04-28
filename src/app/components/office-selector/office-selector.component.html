@@ -1,0 +1,79 @@
+@if (
+    {
+        office: cacheService.selectedOffice$.asObservable() | async,
+        offices: cacheService.offices$.asObservable() | async
+    };
+    as x
+) {
+    <mat-form-field
+        class="office-selector-wrapper"
+        subscriptSizing="dynamic"
+    >
+        <mat-select
+            [value]="x.office"
+            hideSingleSelectionIndicator
+            panelClass="custom-panel-class"
+            (selectionChange)="onOfficeChange($event.value)"
+        >
+            @if (x.office) {
+                <mat-select-trigger>
+                    <div class="filter-wrap">
+                        @if ($any(x.office)?.countryAlpha2) {
+                            <app-country-flag
+                                [alt]="$any(x.office).countryName + ' flag'"
+                                [code]="$any(x.office)?.countryAlpha2"
+                            />
+                        }
+                        @if (x.office === 'all') {
+                            <mat-icon class="align-middle">public</mat-icon>
+                        }
+                        @if (x.office === 'unassigned') {
+                            <mat-icon class="align-middle">person_outline</mat-icon>
+                        }
+                        <span class="ms-1 align-middle">
+                            @switch (x.office) {
+                                @case ('all') {
+                                    Everyone
+                                }
+                                @case ('unassigned') {
+                                    Unassigned office
+                                }
+                                @default {
+                                    {{ $any(x.office)?.name }}
+                                }
+                            }
+                        </span>
+                    </div>
+                </mat-select-trigger>
+            }
+            @if (!hideCommonOptions) {
+                <mat-option value="all">
+                    <mat-icon class="align-middle">public</mat-icon>
+                    <span class="align-middle">Everyone</span>
+                </mat-option>
+            }
+            @if (!hideCommonOptions) {
+                <mat-option value="unassigned">
+                    <mat-icon class="align-middle">person_outline</mat-icon>
+                    <span class="align-middle">Unassigned office</span>
+                </mat-option>
+            }
+            @if (!hideCommonOptions) {
+                <mat-divider />
+            }
+            @for (office of x.offices; track office.id) {
+                <mat-option [value]="office">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        @if (office?.countryAlpha2) {
+                            <app-country-flag
+                                [alt]="office.countryName + ' flag'"
+                                [code]="office?.countryAlpha2"
+                            />
+                        }
+                        <span>{{ office.name }}</span>
+                    </div>
+                </mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+}

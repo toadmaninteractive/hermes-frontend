@@ -1,0 +1,78 @@
+@if (
+    {
+        allocated: allocated$.asObservable() | async,
+        selected: selected$.asObservable() | async,
+        secondStepData: secondStepData$.asObservable() | async
+    };
+    as x
+) {
+    @if (data?.header) {
+        <h1 mat-dialog-title>{{ data.header }}</h1>
+    }
+
+    <button
+        [disableRipple]="true"
+        class="close"
+        mat-icon-button
+        type="button"
+        (click)="dialogRef.close()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+
+    <div mat-dialog-content>
+        <mat-stepper (selectionChange)="updatePortal($event)">
+            <mat-step>
+                <ng-template matStepLabel>Link to project</ng-template>
+                <app-select-employee
+                    [data]="data"
+                    (selectedEmployees)="onSelectEmployees($event)"
+                />
+                <div
+                    #actionsSelectContent
+                    align="end"
+                    mat-dialog-actions
+                >
+                    <button
+                        color="primary"
+                        mat-raised-button
+                        matStepperNext
+                        type="button"
+                    >
+                        Next
+                    </button>
+                </div>
+            </mat-step>
+            <mat-step>
+                <ng-template matStepLabel>Assign to project</ng-template>
+                <app-allocate
+                    [data]="x.secondStepData"
+                    (allocatedEmployees)="onAllocateEmployees($event)"
+                />
+                <div
+                    #actionsAllocateContent
+                    align="end"
+                    mat-dialog-actions
+                >
+                    <button
+                        mat-raised-button
+                        matStepperPrevious
+                        type="button"
+                    >
+                        Back
+                    </button>
+                    <button
+                        color="primary"
+                        mat-raised-button
+                        matStepperNext
+                        type="button"
+                        (click)="onDialogComplete(x.selected, x.allocated)"
+                    >
+                        Finish
+                    </button>
+                </div>
+            </mat-step>
+        </mat-stepper>
+    </div>
+    <ng-template [cdkPortalOutlet]="actionsPortal" />
+}

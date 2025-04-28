@@ -1,0 +1,148 @@
+@if (
+    {
+        employees: employees$.asObservable() | async,
+        filteredEmployees: filteredEmployees$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>
+            <span>Role summary for </span>
+            <span>{{ data.date | date: 'MMMM, YYYY' }}</span>
+        </h3>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div
+        class="d-flex flex-column gap-3"
+        mat-dialog-content
+    >
+        <section>
+            <p>Exclude employees with empty timesheet cells</p>
+
+            <mat-button-toggle-group
+                [value]="excludeEmpty"
+                aria-label="Exclude Empty"
+                hideSingleSelectionIndicator
+                name="excludeEmpty"
+                (change)="switchExcludeEmpty($event)"
+            >
+                <mat-button-toggle [value]="true">Yes</mat-button-toggle>
+                <mat-button-toggle [value]="false">No</mat-button-toggle>
+            </mat-button-toggle-group>
+        </section>
+
+        <section>
+            <p>Selection mode</p>
+
+            <mat-button-toggle-group
+                [value]="mode"
+                aria-label="Select Mode"
+                hideSingleSelectionIndicator
+                name="selectMode"
+                (change)="switchSelectMode($event)"
+            >
+                <mat-button-toggle [value]="selectMode.Include">Include</mat-button-toggle>
+                <mat-button-toggle [value]="selectMode.Omit">Omit</mat-button-toggle>
+            </mat-button-toggle-group>
+        </section>
+
+        @if (mode === selectMode.Include) {
+            <mat-form-field
+                class="w-50"
+                subscriptSizing="dynamic"
+            >
+                <mat-label>Include employees (optional)</mat-label>
+                <mat-select
+                    [(ngModel)]="includedEmployees"
+                    [multiple]="true"
+                    [placeholder]="'Select employees...'"
+                >
+                    <mat-option>
+                        <ngx-mat-select-search
+                            ngModel
+                            noEntriesFoundLabel="No matches"
+                            placeholderLabel="Type to filter..."
+                            (ngModelChange)="filterEmployees($event, x.employees)"
+                        />
+                    </mat-option>
+                    @for (employee of x.filteredEmployees; track employee) {
+                        <mat-option [value]="employee.id">
+                            {{ employee.name }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        }
+        @if (mode === selectMode.Omit) {
+            <mat-form-field
+                class="w-50"
+                subscriptSizing="dynamic"
+            >
+                <mat-label>Omit employees (optional)</mat-label>
+                <mat-select
+                    [(ngModel)]="omittedEmployees"
+                    [multiple]="true"
+                    [placeholder]="'Select employees...'"
+                >
+                    <mat-option>
+                        <ngx-mat-select-search
+                            ngModel
+                            noEntriesFoundLabel="No matches"
+                            placeholderLabel="Type to filter..."
+                            (ngModelChange)="filterEmployees($event, x.employees)"
+                        />
+                    </mat-option>
+                    @for (employee of x.filteredEmployees; track employee) {
+                        <mat-option [value]="employee.id">
+                            {{ employee.name }}
+                        </mat-option>
+                    }
+                </mat-select>
+            </mat-form-field>
+        }
+
+        <section>
+            <p>Output format</p>
+
+            <mat-button-toggle-group
+                [value]="isCsv"
+                aria-label="File type"
+                hideSingleSelectionIndicator
+                name="isCsv"
+                (change)="switchFiletype($event)"
+            >
+                <mat-button-toggle [value]="true">CSV</mat-button-toggle>
+                <mat-button-toggle [value]="false">JSON</mat-button-toggle>
+            </mat-button-toggle-group>
+        </section>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="dialogRef.close(null)"
+        >
+            Cancel
+        </button>
+        <a
+            [href]="getLink(data.date)"
+            color="primary"
+            download
+            mat-raised-button
+            (click)="dialogRef.close()"
+        >
+            Download
+        </a>
+    </div>
+}

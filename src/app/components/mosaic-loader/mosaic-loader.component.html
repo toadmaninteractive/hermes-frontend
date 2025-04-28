@@ -1,0 +1,7 @@
+<div class="mosaic-loader">
+    @for (r of rows; track r; let rowIndex = $index) {
+        @for (c of cols; track c; let colIndex = $index) {
+            <div class="cell d-{{ rowIndex + colIndex }}">&nbsp;</div>
+        }
+    }
+</div>

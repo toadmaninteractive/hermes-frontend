@@ -1,0 +1,28 @@
+@if (data?.title) {
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+}
+@if (data?.html || data?.content) {
+    <mat-dialog-content>
+        <p [innerHTML]="data?.html">{{ data?.content }}</p>
+    </mat-dialog-content>
+}
+<div
+    align="end"
+    mat-dialog-actions
+>
+    <button
+        mat-raised-button
+        type="button"
+        (click)="onCancel()"
+    >
+        {{ data.cancelText || 'Cancel' }}
+    </button>
+    <button
+        color="primary"
+        mat-raised-button
+        type="button"
+        (click)="onConfirm()"
+    >
+        {{ data.confirmText || 'Confirm' }}
+    </button>
+</div>

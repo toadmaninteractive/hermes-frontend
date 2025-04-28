@@ -1,0 +1,14 @@
+:host {
+    display: contents;
+}
+
+.flag {
+    display: inline-block;
+    margin: 2px;
+
+    box-shadow: 0 0 2px 1px var(--bs-border-color-translucent);
+
+    vertical-align: middle;
+
+    border-radius: 2px;
+}

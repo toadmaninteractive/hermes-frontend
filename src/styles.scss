@@ -1,0 +1,27 @@
+/* You can add global styles to this file, and also import other style files */
+$link-decoration: none;
+/// NOTE: we sync material dark palette with bootstrap dark theme variables
+$enable-dark-mode: true;
+// Bootstrap Utility imports
+@import 'bootstrap/scss/bootstrap-reboot';
+@import 'bootstrap/scss/bootstrap-utilities';
+// @import 'bootstrap/scss/bootstrap-grid';
+// Material Theme depending on Bootstrap Variables
+@import './styles/palette';
+@import './styles/theme';
+
+// Third-party modules
+@import 'ngx-toastr/toastr';
+
+// Bootstrap Components
+@import 'bootstrap/scss/alert';
+
+// Material overrides
+@import './styles/root';
+@import './styles/dialog';
+@import './styles/checkbox';
+@import './styles/table';
+@import './styles/cursors';
+@import './styles/background';
+@import './styles/list';
+@import './styles/info-card';

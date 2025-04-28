@@ -1,0 +1,92 @@
+@if (
+    {
+        availableEmployees: availableEmployees$.asObservable() | async,
+        employees: filteredEmployees$.asObservable() | async,
+        selected: selected$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        @if (data?.header) {
+            <h3 mat-dialog-title>{{ data?.header }}</h3>
+        }
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close(null)"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <mat-form-field
+            class="pb-2"
+            subscriptSizing="dynamic"
+        >
+            <input
+                #filterString
+                [formControl]="filterControl"
+                matInput
+                placeholder="Type to filter..."
+            />
+            @if (filterControl.value) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="filterControl.patchValue('')"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+        <div class="dialog-scroll-wrapper">
+            @if (x.employees?.length === 0) {
+                <div class="ms-4 f-s-16 font-italic text-muted">No matches found</div>
+            } @else {
+                <mat-selection-list
+                    #list
+                    [multiple]="data.multiple"
+                    hideSingleSelectionIndicator
+                    (selectionChange)="onSelect($event, x.selected)"
+                >
+                    @for (employee of x.employees; track employee) {
+                        <mat-list-option
+                            [selected]="x.selected.has(employee.id)"
+                            [value]="employee.id"
+                            checkboxPosition="before"
+                        >
+                            <span style="padding-right: 10px">{{ employee.name }}</span>
+                            <span class="office-label">{{ employee.officeName }}</span>
+                        </mat-list-option>
+                    }
+                </mat-selection-list>
+            }
+        </div>
+    </div>
+
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(null)"
+        >
+            Cancel
+        </button>
+        <button
+            [disabled]="x.selected.size === 0"
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(x.selected)"
+        >
+            Apply
+        </button>
+    </div>
+}

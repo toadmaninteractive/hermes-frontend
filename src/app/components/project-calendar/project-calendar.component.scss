@@ -1,0 +1,136 @@
+:host {
+    // NOTE: overrides angular-calendar styles
+    ::ng-deep {
+        .cal-month-view .cal-day-cell:not(:last-child) {
+            border: none !important;
+        }
+
+        .cal-cell-top {
+            position: relative;
+
+            border: 3px solid var(--mat-table-background-color) !important;
+            border-radius: 7px !important;
+
+            transition: opacity ease-in-out 150ms;
+        }
+
+        .cal-cell-top:hover {
+            border: 3px solid var(--mat-table-row-item-label-text-color) !important;
+        }
+
+        .cal-month-view .cal-cell-row {
+            font-weight: initial;
+        }
+
+        .cal-month-view .cal-days .cal-cell-row {
+            border: none !important;
+        }
+
+        .cal-month-view .cal-days {
+            border: none !important;
+        }
+
+        .cal-month-view,
+        .cal-month-view .cal-day-cell.cal-today,
+        .cal-month-view .cal-cell-row:hover,
+        .cal-month-view .cal-cell-row .cal-cell:hover,
+        .cal-month-view .cal-cell.cal-has-events.cal-open {
+            background: transparent;
+        }
+    }
+}
+
+.day-number {
+    float: left;
+
+    font-weight: 400;
+    font-size: 1.2em;
+
+    color: var(--mat-sidenav-container-text-color);
+
+    opacity: 0.8;
+}
+
+.key {
+    height: 60px;
+    // padding-top: 11px;
+    font-size: 3em;
+    line-height: 60px;
+    text-align: center;
+}
+
+.symbol {
+    position: relative;
+    bottom: -7px;
+
+    font-family: 'JetBrains Mono', monospace;
+
+    color: var(--bs-light);
+}
+
+.custom-cell-grid {
+    // display: inline-grid;
+    // grid-template-rows: 3fr 1fr;
+    width: 110px;
+    height: 110px;
+    padding: 8px;
+}
+
+.empty-cell-focused:hover {
+    background-image: url('../../../assets/media/svg/icons/Other/plus.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+// .cellEditor .mat-mdc-dialog-container {
+//     padding: 0 !important;
+// }
+
+.bg-dashed {
+    background: repeating-linear-gradient(
+        135deg,
+        rgb(212 213 230 / 25%),
+        rgb(212 213 230 / 25%) 5px,
+        rgb(108 117 125 / 25%) 5px,
+        rgb(108 117 125 / 25%) 8px
+    );
+}
+
+.header-day-item {
+    width: 110px;
+    margin-left: 2px;
+    padding-bottom: 10px;
+
+    font-size: 1.5em;
+    text-align: center;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.lock-icon {
+    &::after {
+        content: url('../../../assets/media/svg/icons/General/Lock.svg');
+
+        position: absolute;
+        top: 0;
+        right: 7px;
+
+        width: 16px;
+        height: 16px;
+
+        transform: scale(0.86);
+    }
+}
+
+.no-event {
+    user-select: none;
+    pointer-events: none;
+}
+
+:host .selected {
+    background-color: rgb(214 235 255 / 100%) !important;
+    box-shadow: inset 0 0 1px 2px rgb(54 153 255);
+}

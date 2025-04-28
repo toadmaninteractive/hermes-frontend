@@ -1,0 +1,147 @@
+@if (
+    {
+        loading: loading$.asObservable() | async,
+        changed: changed$.asObservable() | async,
+        countries: countries$ | async,
+        personnelGroups: personnelGroups$ | async
+    };
+    as x
+) {
+    <div>
+        <h1 mat-dialog-title>{{ data ? 'Edit office' : 'New office' }}</h1>
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <form
+            [class.text-muted]="x.loading"
+            [formGroup]="officeForm"
+            class="dialog-form"
+        >
+            <fieldset [disabled]="x.loading">
+                <!--
+        <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+        -->
+
+                <mat-form-field>
+                    <mat-label>Name</mat-label>
+                    <input
+                        [formControlName]="fields.Name"
+                        matInput
+                        placeholder="Office name"
+                        required
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Country</mat-label>
+                    <mat-select
+                        [formControlName]="fields.CountryId"
+                        placeholder="Country"
+                        required
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                [formControl]="countryFilterControl"
+                                noEntriesFoundLabel="No countries match the search criteria"
+                                placeholderLabel="Type in to filter..."
+                            />
+                        </mat-option>
+                        @for (country of x.countries; track country) {
+                            <mat-option [value]="country.id">
+                                {{ country.name }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Address</mat-label>
+                    <input
+                        [formControlName]="fields.Address"
+                        matInput
+                        placeholder="Address"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>City</mat-label>
+                    <input
+                        [formControlName]="fields.City"
+                        matInput
+                        placeholder="City"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Postal code</mat-label>
+                    <input
+                        [formControlName]="fields.PostalCode"
+                        matInput
+                        placeholder="Postal code"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Linked group</mat-label>
+                    <mat-select
+                        [formControlName]="fields.GroupId"
+                        placeholder="LDAP group"
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                [formControl]="groupFilterControl"
+                                noEntriesFoundLabel="No groups match the search criteria"
+                                placeholderLabel="Type in to filter..."
+                            />
+                        </mat-option>
+                        @for (group of x.personnelGroups; track group) {
+                            <mat-option [value]="group.id">
+                                {{ group.name }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Visma country</mat-label>
+                    <input
+                        [formControlName]="fields.VismaCountry"
+                        matInput
+                        placeholder="Postal code"
+                    />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Visma company id</mat-label>
+                    <input
+                        [formControlName]="fields.VismaCompanyId"
+                        matInput
+                        placeholder="Postal code"
+                    />
+                </mat-form-field>
+            </fieldset>
+        </form>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            [mat-dialog-close]="null"
+            mat-button
+            type="button"
+        >
+            No, thanks
+        </button>
+        <button
+            [disabled]="x.loading || !x.changed"
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="updateEvent$.next($event)"
+        >
+            {{ data ? 'Update office' : 'Create office' }}
+        </button>
+    </div>
+}

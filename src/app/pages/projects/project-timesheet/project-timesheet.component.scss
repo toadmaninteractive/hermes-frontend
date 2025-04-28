@@ -1,0 +1,38 @@
+:host {
+    display: flex;
+    flex-direction: column;
+
+    height: 100%;
+}
+
+$block-size: 40px;
+
+.key {
+    width: $block-size;
+    height: $block-size;
+
+    font-size: 2rem;
+
+    line-height: $block-size;
+
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+
+    color: #ffffffed;
+    vertical-align: middle;
+
+    border-radius: 8px;
+    aspect-ratio: 1;
+}
+
+.td-action-btns {
+    &.readonly * {
+        cursor: not-allowed;
+    }
+}
+
+.mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}

@@ -1,0 +1,71 @@
+@if (
+    {
+        team: team$.asObservable() | async,
+        employees: employees$.asObservable() | async,
+        managers: managers$.asObservable() | async,
+        filteredEmployees: filteredEmployees$.asObservable() | async
+    };
+    as x
+) {
+    @if (x.team) {
+        <div>
+            <h3 mat-dialog-title>{{ x.team.title | titlecase }} managers</h3>
+
+            <button
+                [disableRipple]="true"
+                class="close"
+                mat-icon-button
+                type="button"
+                (click)="dialogRef.close()"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+        <div mat-dialog-content>
+            <mat-form-field class="w-100">
+                <mat-chip-grid
+                    #chipList
+                    aria-label="Member selection"
+                >
+                    @for (manager of x.managers; track manager) {
+                        <mat-chip-row
+                            [highlighted]="manager.id === x.team.createdBy"
+                            [removable]="manager.id !== x.team.createdBy"
+                            color="accent"
+                            (removed)="removeTeamManager(manager.id, x.team.id)"
+                        >
+                            {{ manager.name }}
+                            @if (manager.id !== x.team.createdBy) {
+                                <button
+                                    matChipRemove
+                                    type="button"
+                                >
+                                    <mat-icon>cancel</mat-icon>
+                                </button>
+                            }
+                        </mat-chip-row>
+                    }
+                    <input
+                        #managerInput
+                        [formControl]="managerInputCtrl"
+                        [matAutocomplete]="auto"
+                        [matChipInputFor]="chipList"
+                        [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                        placeholder="Add team manager..."
+                        (matChipInputTokenEnd)="addTeamManager(managerInput.value, x.team.id, x.employees)"
+                    />
+                </mat-chip-grid>
+                <mat-autocomplete
+                    #auto="matAutocomplete"
+                    (optionSelected)="addTeamManager($event.option.value, x.team.id, x.employees)"
+                >
+                    @for (member of x.filteredEmployees; track member) {
+                        <mat-option [value]="member.id">
+                            {{ member.name }}
+                        </mat-option>
+                    }
+                </mat-autocomplete>
+            </mat-form-field>
+        </div>
+    }
+}

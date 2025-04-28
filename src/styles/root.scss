@@ -1,0 +1,43 @@
+html {
+    -ms-text-size-adjust: 100%; // 2
+    -webkit-text-size-adjust: 100%; // 2
+    text-size-adjust: 100%; // 2
+}
+
+// Body and HTML
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+
+    // font-weight: $font-weight-base;
+    // font-size: $root-font-size !important;
+    // font-family: $font-family-base;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    -ms-text-size-adjust: 100%; // 2
+
+    // // Tablet mode
+    // @include media-breakpoint-down(lg) {
+    //     font-size: $root-font-size-lg !important;
+    // }
+
+    // // Mobile mode
+    // @include media-breakpoint-down(md) {
+    //     font-size: $root-font-size-md !important;
+    // }
+}
+
+// Body
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+// Angular Router Element
+router-outlet {
+    display: none;
+}

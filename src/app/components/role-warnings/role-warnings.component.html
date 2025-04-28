@@ -1,0 +1,13 @@
+@if ({ warnings: warningGroups$.asObservable() | async }; as x) {
+    @if (x.warnings.unavailableRoles.length !== 0 || x.warnings.unassignedRoles.length !== 0) {
+        <button
+            color="warn"
+            mat-button
+            type="button"
+            (click)="openWarningsDialog(x.warnings)"
+        >
+            <mat-icon>warning</mat-icon>
+            <span>Warnings</span>
+        </button>
+    }
+}

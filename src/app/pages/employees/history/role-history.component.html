@@ -1,0 +1,95 @@
+@if (
+    {
+        entries: entries$.asObservable() | async,
+        filteredEntries: filteredEntries$.asObservable() | async,
+        office: cacheService.selectedOffice$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <mat-toolbar-row>
+                    @if (x.office) {
+                        <div class="d-flex justify-content-between flex-fill">
+                            <h2 class="mat-headline-5 m-0">
+                                {{ $any(x.office)?.name || ($any(x.office) | titlecase) }}
+                                <small>| Employee role changes </small>
+                            </h2>
+
+                            <app-office-selector (officeChanged)="navigateTo($event)" />
+                        </div>
+                    }
+                </mat-toolbar-row>
+                <mat-toolbar-row>
+                    <mat-form-field
+                        floatLabel="auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <input
+                            #filter
+                            [formControl]="filterControl"
+                            matInput
+                            placeholder="Type to filter..."
+                        />
+                        @if (filterControl.value) {
+                            <button
+                                aria-label="Clear"
+                                mat-icon-button
+                                matSuffix
+                                type="button"
+                                (click)="filterControl.patchValue('')"
+                            >
+                                <mat-icon>close</mat-icon>
+                            </button>
+                        }
+                    </mat-form-field>
+                </mat-toolbar-row>
+            </mat-toolbar>
+        </div>
+        <div
+            [style.overflow]="'auto'"
+            class="h-100 p-3"
+            with-scroll-top
+        >
+            @if (x.filteredEntries.length) {
+                @for (record of x.filteredEntries; track record) {
+                    <div class="d-block history-entry">
+                        @if (record.properties['affects'] && record.properties['data']['role']) {
+                            {{ record.createdAt | date: '[dd-MMM-YYYY HH:mm]' }}
+                            <a
+                                [routerLink]="[
+                                    '/',
+                                    'employees',
+                                    record.actorUsername,
+                                    x.selectedDate.getFullYear(),
+                                    x.selectedDate.getMonth() + 1
+                                ]"
+                            >
+                                {{ record.actorName }}
+                            </a>
+                            assigns
+                            <strong>{{ record.properties['data']['role']['title'] }}</strong>
+                            role [Visma code: <strong>{{ record.properties['data']['role']['code'] }}</strong
+                            >] to
+                            <a
+                                [routerLink]="[
+                                    '/',
+                                    'employees',
+                                    record.properties['affects'][0]['username'],
+                                    x.selectedDate.getFullYear(),
+                                    x.selectedDate.getMonth() + 1
+                                ]"
+                            >
+                                {{ record.properties['affects'][0]['name'] }}
+                            </a>
+                        }
+                    </div>
+                }
+            } @else {
+                No records found
+            }
+        </div>
+    </div>
+}

@@ -1,0 +1,305 @@
+@if (
+    {
+        date: date$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        office: cacheService.selectedOffice$ | async,
+        employees: employees$.asObservable() | async,
+        role: role$.asObservable() | async,
+        username: (accountService.profile$.asObservable() | async).username
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <div class="d-flex justify-content-between flex-fill gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <mat-form-field
+                            class="filter"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                #filter
+                                [formControl]="filterControl"
+                                matInput
+                                placeholder="Type to filter..."
+                            />
+                            @if (filterControl.value) {
+                                <button
+                                    aria-label="Clear"
+                                    mat-icon-button
+                                    matSuffix
+                                    type="button"
+                                    (click)="filterControl.patchValue('')"
+                                >
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            }
+                        </mat-form-field>
+                        <button
+                            appMatTooltipAutoHide
+                            class="d-flex"
+                            mat-icon-button
+                            matTooltip="Click to refresh"
+                            matTooltipPosition="above"
+                            title="Refresh"
+                            type="button"
+                            (click)="refresh()"
+                        >
+                            <mat-icon color="primary">autorenew</mat-icon>
+                        </button>
+
+                        <mat-divider
+                            [vertical]="true"
+                            class="h-50"
+                        />
+
+                        <a
+                            [routerLink]="'office/' + ($any(x.office)?.id || x.office) + '/history'"
+                            color="primary"
+                            mat-button
+                            >Employee role changes</a
+                        >
+
+                        <mat-divider
+                            [vertical]="true"
+                            class="h-50"
+                        />
+
+                        <mat-checkbox
+                            [(ngModel)]="showFired"
+                            [disableRipple]="true"
+                            class="info-item"
+                            (change)="onFiredChecked(x.employees, x.username)"
+                        >
+                            Show fired employees
+                        </mat-checkbox>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <app-office-selector
+                            [section]="pageTag"
+                            [username]="x.username"
+                        />
+                        <app-role-selector
+                            [role]="x.role"
+                            [section]="pageTag"
+                            [username]="x.username"
+                            (roleChange)="onRoleChange($event)"
+                        />
+                    </div>
+                </div>
+            </mat-toolbar>
+        </div>
+
+        <div
+            [class.empty-table]="dataSource?.filteredData?.length === 0"
+            [style.overflow]="x.loading ? 'hidden' : 'auto'"
+            class="h-100 d-flex justify-content-between flex-column"
+            with-scroll-top
+        >
+            <table
+                [dataSource]="dataSource"
+                [matSortActive]="sortBy"
+                [matSortDirection]="sortDir"
+                class="w-100"
+                mat-table
+                matSort
+                matSortDisableClear
+                (matSortChange)="sortTable($any($event), x.username)"
+            >
+                <!-- ID column -->
+                <ng-container [matColumnDef]="column.Id">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Id"
+                        class="cell-id non-selectable"
+                        mat-header-cell
+                    >
+                        ID
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        [class.deleted]="account.isDeleted"
+                        class="cell-id"
+                        mat-cell
+                    >
+                        <strong>{{ account.id }}</strong>
+                    </td>
+                </ng-container>
+                <!-- Name column -->
+                <ng-container [matColumnDef]="column.Name">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Name"
+                        class="cell-name non-selectable"
+                        mat-header-cell
+                    >
+                        Name
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        <a [routerLink]="[account.username, x.date.getFullYear(), x.date.getMonth() + 1]">
+                            <strong>{{ account.name }}</strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Supervisor column -->
+                <ng-container [matColumnDef]="column.SupervisorName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.SupervisorName"
+                        class="cell-name non-selectable"
+                        mat-header-cell
+                    >
+                        Supervisor
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        @if (account.supervisorUsername) {
+                            <a [routerLink]="[account.supervisorUsername, x.date.getFullYear(), x.date.getMonth() + 1]">
+                                <strong>{{ account.supervisorName }}</strong>
+                            </a>
+                        }
+                        @if (!account.supervisorUsername) {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Position column -->
+                <ng-container [matColumnDef]="column.JobTitle">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.JobTitle"
+                        class="cell-position non-selectable"
+                        mat-header-cell
+                    >
+                        Position
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        @if (account.jobTitle) {
+                            <span>{{ account.jobTitle }}</span>
+                        } @else {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Role column -->
+                <ng-container [matColumnDef]="column.RoleTitle">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.RoleTitle"
+                        class="cell-position non-selectable"
+                        mat-header-cell
+                    >
+                        Role
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        @if (account.roleTitle) {
+                            <span>{{ account.roleTitle }}</span>
+                        } @else {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Office column -->
+                <ng-container [matColumnDef]="column.OfficeName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.OfficeName"
+                        class="cell-location non-selectable"
+                        mat-header-cell
+                    >
+                        Office
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        @if (account.officeName) {
+                            <span>{{ account.officeName }}</span>
+                        } @else {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </td>
+                </ng-container>
+                <!-- Created At column -->
+                <ng-container [matColumnDef]="column.CreatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.CreatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Created At
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        {{ account.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Updated At column -->
+                <ng-container [matColumnDef]="column.UpdatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.UpdatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Updated At
+                    </th>
+                    <td
+                        *matCellDef="let account"
+                        mat-cell
+                    >
+                        {{ account.updatedAt ? (account.updatedAt | date: 'yyyy-MM-dd HH:mm') : 'Never' }}
+                    </td>
+                </ng-container>
+                <!-- Table rows -->
+                <tr
+                    *matHeaderRowDef="displayedColumns; sticky: true"
+                    mat-header-row
+                ></tr>
+                <tr
+                    *matRowDef="let row; columns: displayedColumns"
+                    [class.deleted]="row.isDeleted"
+                    [class.text-muted]="x.loading"
+                    mat-row
+                ></tr>
+            </table>
+            @if (dataSource?.filteredData?.length === 0) {
+                <div class="indicator">
+                    @switch (x.loading) {
+                        @case (true) {
+                            <app-loading-indicator [isInline]="true" />
+                        }
+                        @case (false) {
+                            <span>No records found</span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+
+        <mat-paginator
+            [length]="dataSource?.filteredData?.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizes"
+            class="paginator-fixed mat-elevation-z2"
+            showFirstLastButtons
+            (page)="paginatorChanged($event, x.username)"
+        />
+    </div>
+}

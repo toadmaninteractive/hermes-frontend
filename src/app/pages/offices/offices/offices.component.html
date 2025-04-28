@@ -1,0 +1,302 @@
+@if (
+    {
+        date: date$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        profile: accountService.profile$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <div class="d-flex justify-content-between flex-fill">
+                    <div class="d-flex align-items-center gap-2">
+                        <mat-form-field
+                            class="filter"
+                            subscriptSizing="dynamic"
+                        >
+                            <input
+                                [formControl]="filterControl"
+                                matInput
+                                placeholder="Type to filter..."
+                            />
+                            @if (filterControl.value) {
+                                <button
+                                    aria-label="Clear"
+                                    mat-icon-button
+                                    matSuffix
+                                    type="button"
+                                    (click)="filterControl.patchValue('')"
+                                >
+                                    <mat-icon>close</mat-icon>
+                                </button>
+                            }
+                        </mat-form-field>
+                        <button
+                            appMatTooltipAutoHide
+                            class="d-flex"
+                            mat-icon-button
+                            matTooltip="Click to refresh"
+                            matTooltipPosition="above"
+                            title="Refresh"
+                            type="button"
+                            (click)="refresh()"
+                        >
+                            <mat-icon color="primary">autorenew</mat-icon>
+                        </button>
+                    </div>
+                    @if (x.profile?.isSuperadmin) {
+                        <button
+                            color="primary"
+                            mat-raised-button
+                            type="button"
+                            (click)="showOfficeCreateDialog()"
+                        >
+                            Add office
+                        </button>
+                    }
+                </div>
+            </mat-toolbar>
+        </div>
+
+        <div
+            [class.empty-table]="dataSource?.filteredData?.length === 0"
+            [style.overflow]="x.loading ? 'hidden' : 'auto'"
+            class="h-100 d-flex justify-content-between flex-column"
+            with-scroll-top
+        >
+            <table
+                [dataSource]="dataSource"
+                [matSortActive]="sortBy"
+                [matSortDirection]="sortDir"
+                class="w-100"
+                mat-table
+                matSort
+                matSortDisableClear
+                (matSortChange)="sortTable($event, x.profile.username)"
+            >
+                <!-- ID column -->
+                <ng-container [matColumnDef]="column.Id">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Id"
+                        class="cell-id non-selectable"
+                        mat-header-cell
+                    >
+                        ID
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        <strong>{{ office.id }}</strong>
+                    </td>
+                </ng-container>
+                <!-- Office Name column -->
+                <ng-container [matColumnDef]="column.Name">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.Name"
+                        class="cell-name non-selectable"
+                        mat-header-cell
+                    >
+                        Office Name
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        <a [routerLink]="[getOfficeLink(office.name), x.date.getFullYear(), x.date.getMonth() + 1]">
+                            <strong> {{ office.name }} </strong>
+                        </a>
+                    </td>
+                </ng-container>
+                <!-- Country column -->
+                <ng-container [matColumnDef]="column.CountryName">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.CountryName"
+                        class="cell-country non-selectable"
+                        mat-header-cell
+                    >
+                        Country
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        <div class="cell-with-image">
+                            @if (office.countryAlpha2) {
+                                <app-country-flag
+                                    [alt]="office.countryName + ' flag'"
+                                    [code]="office.countryAlpha2"
+                                />
+                            }
+                            <span class="ms-2 align-middle">{{ office.countryName }}</span>
+                        </div>
+                    </td>
+                </ng-container>
+                <!-- Visma Tag column -->
+                <ng-container [matColumnDef]="column.VismaTag">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.VismaTag"
+                        class="non-selectable"
+                        mat-header-cell
+                    >
+                        Visma Tag
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        @if (office.vismaCountry && office.vismaCompanyId) {
+                            <img
+                                alt="Visma logo"
+                                class="v-a-sub"
+                                height="16"
+                                src="assets/media/logos/visma-logo.png"
+                                width="16"
+                            />
+                        }
+                        <span class="ms-1 align-middle">{{ office.vismaCountry }}</span>
+                        @if (office.vismaCountry && office.vismaCompanyId) {
+                            <span class="text-muted">&nbsp;&rsaquo;&nbsp;</span>
+                        }
+                        <span class="align-middle">{{ office.vismaCompanyId }}</span>
+                    </td>
+                </ng-container>
+                <!-- Created At column -->
+                <ng-container [matColumnDef]="column.CreatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.CreatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Created At
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        {{ office.createdAt | date: 'yyyy-MM-dd hh:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Updated At column -->
+                <ng-container [matColumnDef]="column.UpdatedAt">
+                    <th
+                        *matHeaderCellDef
+                        [mat-sort-header]="column.UpdatedAt"
+                        class="cell-datetime non-selectable"
+                        mat-header-cell
+                    >
+                        Updated At
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        mat-cell
+                    >
+                        {{ office.updatedAt | date: 'yyyy-MM-dd hh:mm' }}
+                    </td>
+                </ng-container>
+                <!-- Actions column -->
+                <ng-container [matColumnDef]="column.Actions">
+                    <th
+                        *matHeaderCellDef
+                        class="cell-actions text-center non-selectable"
+                        mat-header-cell
+                    >
+                        Actions
+                    </th>
+                    <td
+                        *matCellDef="let office"
+                        class="text-center"
+                        mat-cell
+                    >
+                        <button
+                            [disableRipple]="true"
+                            [matMenuTriggerFor]="menu"
+                            mat-icon-button
+                            type="button"
+                        >
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #menu="matMenu">
+                            <button
+                                appMatTooltipAutoHide
+                                mat-menu-item
+                                matTooltip="Click to edit"
+                                matTooltipPosition="above"
+                                type="button"
+                                (click)="showOfficeEditDialog(office)"
+                            >
+                                <mat-icon>edit</mat-icon>
+                                <span>Edit</span>
+                            </button>
+                            <button
+                                appMatTooltipAutoHide
+                                mat-menu-item
+                                matTooltip="Click to range roles"
+                                matTooltipPosition="above"
+                                type="button"
+                                (click)="showRoleChangeDialog(office)"
+                            >
+                                <mat-icon>person</mat-icon>
+                                <span>Roles</span>
+                            </button>
+                            <button
+                                [appConfirmConfig]="{
+                                    data: {
+                                        title: 'Confirmation',
+                                        html: 'Delete office <b>' + office.name + '</b>?',
+                                        confirmText: 'Delete'
+                                    }
+                                }"
+                                appMatTooltipAutoHide
+                                mat-menu-item
+                                matTooltip="Click to delete"
+                                matTooltipPosition="above"
+                                type="button"
+                                (confirm)="deleteOffice(office)"
+                            >
+                                <mat-icon color="warn">delete</mat-icon>
+                                <span>Delete</span>
+                            </button>
+                        </mat-menu>
+                    </td>
+                </ng-container>
+                <!-- Table rows -->
+                <tr
+                    *matHeaderRowDef="displayedColumns; sticky: true"
+                    mat-header-row
+                ></tr>
+                <tr
+                    *matRowDef="let row; columns: displayedColumns"
+                    mat-row
+                ></tr>
+            </table>
+            @if (dataSource?.filteredData?.length === 0) {
+                <div class="indicator">
+                    @switch (x.loading) {
+                        @case (true) {
+                            <app-loading-indicator [isInline]="true" />
+                        }
+                        @case (false) {
+                            <span>No records found</span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+        <mat-paginator
+            [length]="dataSource?.filteredData?.length"
+            [pageIndex]="pageIndex"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="pageSizes"
+            class="paginator-fixed mat-elevation-z2"
+            showFirstLastButtons
+            (page)="paginatorChanged($event, x.profile.username)"
+        />
+    </div>
+}

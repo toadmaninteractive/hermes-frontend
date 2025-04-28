@@ -1,0 +1,300 @@
+@if (
+    {
+        directLink: directLink$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async,
+        isSuperAdmin: accountService.isSuperAdmin$.asObservable() | async,
+        isOfficeManager: accountService.isOfficeManager$.asObservable() | async,
+        employee: employee$.asObservable() | async,
+        filteredProjects: filteredProjects$.asObservable() | async,
+        projects: projects$.asObservable() | async,
+        hireAt: hireAtControl.valueChanges | async,
+        fireAt: fireAtControl.valueChanges | async
+    };
+    as x
+) {
+    @if (x.employee) {
+        <div>
+            <mat-toolbar>
+                <mat-toolbar-row>
+                    <div class="d-flex justify-content-between align-items-center flex-fill">
+                        <!-- Header -->
+                        <div class="d-flex flex-column justify-content-end w-100">
+                            <h1 class="mat-headline-4 m-0">
+                                <span class="user-select-all">
+                                    {{ x.employee.name }}
+                                </span>
+                                @if (x.employee.isDeleted) {
+                                    <small class="text-danger mat-body-1 align-middle"> DELETED </small>
+                                }
+                            </h1>
+                        </div>
+                        <!-- Office manager -->
+
+                        <mat-checkbox
+                            [checked]="x.employee.isOfficeManager"
+                            [disableRipple]="true"
+                            [disabled]="!canChangeOfficeManager"
+                            (change)="onToggleOfficeManager(x.employee?.id, $event.checked)"
+                        >
+                            Office manager
+                        </mat-checkbox>
+                    </div>
+                </mat-toolbar-row>
+                <mat-toolbar-row class="align-items-start">
+                    @if (x.employee.jobTitle || x.employee.department || x.employee.supervisorName) {
+                        <span class="mat-subtitle-1">
+                            @if (x.employee.jobTitle) {
+                                <span>
+                                    {{ x.employee.jobTitle || '' }}
+                                </span>
+                            }
+                            @if (x.employee.jobTitle && x.employee.department) {
+                                <span class="text-body-tertiary"> at </span>
+                            }
+                            @if (x.employee.department) {
+                                <span>
+                                    {{ x.employee.department || '' }}
+                                </span>
+                            }
+                            @if ((x.employee.jobTitle || x.employee.department) && x.employee.supervisorName) {
+                                <span class="text-body-tertiary"> | </span>
+                            }
+                            @if (x.employee.supervisorName) {
+                                <span>
+                                    <span>Reports to</span>
+                                    <a
+                                        [routerLink]="[
+                                            '/',
+                                            'employees',
+                                            x.employee.supervisorUsername,
+                                            x.selectedDate.getFullYear(),
+                                            x.selectedDate.getMonth() + 1
+                                        ]"
+                                        color="primary"
+                                        mat-button
+                                    >
+                                        <span class="mat-subtitle-1">
+                                            {{ x.employee.supervisorName }}
+                                        </span>
+                                    </a>
+                                </span>
+                            }
+                        </span>
+                    }
+                </mat-toolbar-row>
+            </mat-toolbar>
+        </div>
+
+        <div class="d-flex justify-content-between gap-4 px-3 py-1">
+            <div class="info-card flex-wrap">
+                <!-- Office -->
+                <div class="info-card-grid flag">
+                    @if (x.employee.officeCountryAlpha2) {
+                        <app-country-flag [code]="x.employee.officeCountryAlpha2" />
+                    } @else {
+                        <span class="material-icons">public</span>
+                    }
+
+                    <span class="info-card-title">{{ x.employee.officeName || 'Unassigned' }}</span>
+
+                    <div class="info-card-action-btns">
+                        @if (canChangeOffice) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="onChangeOffice()"
+                            >
+                                <small>change</small>
+                            </a>
+                        }
+                        @if (canChangeOffice) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="onResetOffice(x.employee.id)"
+                            >
+                                <small>reset</small>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Allocated to project -->
+                <div class="info-card-grid">
+                    <mat-icon class="">interests</mat-icon>
+
+                    <span class="info-card-title">
+                        {{ x.employee.allocatedToProjectName || 'Project unassigned' }}
+                    </span>
+
+                    <div class="info-card-action-btns">
+                        @if (canChangeProject) {
+                            <div>
+                                <a
+                                    color="primary"
+                                    mat-button
+                                    (click)="onChangeProject()"
+                                >
+                                    <small>change</small>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Role -->
+                <div class="info-card-grid">
+                    <mat-icon>work</mat-icon>
+
+                    <span class="info-card-title">
+                        @if (x.employee.roleTitle) {
+                            <span>{{ x.employee.roleTitle }}</span>
+                        } @else {
+                            <span class="text-muted">Unassigned role</span>
+                        }
+                    </span>
+
+                    <div class="info-card-action-btns">
+                        @if (canChangeRole) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="onChangeRole(x.employee.officeId, x.employee.roleTitle)"
+                            >
+                                <small>change</small>
+                            </a>
+                        }
+                        @if (canChangeProject) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="onOpenHistoryDialog(x.employee.id)"
+                            >
+                                <small>history</small>
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Hired_at date -->
+                <div class="info-card-grid">
+                    <mat-icon>person_add_alt_1</mat-icon>
+                    <div class="info-card-title">
+                        <mat-datepicker
+                            #pickerHireAt
+                            style="display: none"
+                        />
+                        <input
+                            [class.cursor-default]="!canChangeRole"
+                            [class.cursor-pointer]="canChangeRole"
+                            [formControl]="hireAtControl"
+                            [matDatepicker]="pickerHireAt"
+                            [min]="minDatePicker"
+                            class="hire-date-view"
+                            matInput
+                            placeholder="Unassigned"
+                            readonly
+                            (click)="canChangeRole ? pickerHireAt.open() : null"
+                        />
+                    </div>
+                    <div class="info-card-action-btns">
+                        @if ((x.isSuperAdmin || x.isOfficeManager) && canChangeRole) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="pickerHireAt.open()"
+                            >
+                                <small>change</small>
+                            </a>
+                            @if (isShowResetHiredAt) {
+                                <a
+                                    color="primary"
+                                    mat-button
+                                    (click)="hireAtControl.setValue(null)"
+                                >
+                                    <small>reset</small>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Fired_at date -->
+                <div class="info-card-grid">
+                    <mat-icon>person_remove_alt_1</mat-icon>
+                    <div class="mat-subtitle-1 m-0 ms-2">
+                        <mat-datepicker
+                            #pickerFireAt
+                            style="display: none"
+                        />
+                        <input
+                            [class.cursor-default]="!canChangeRole"
+                            [class.cursor-pointer]="canChangeRole"
+                            [formControl]="fireAtControl"
+                            [matDatepicker]="pickerFireAt"
+                            [min]="minDatePicker"
+                            class="hire-date-view"
+                            matInput
+                            placeholder="Unassigned"
+                            readonly
+                            (click)="canChangeRole ? pickerFireAt.open() : null"
+                        />
+                    </div>
+                    <div class="info-card-action-btns">
+                        @if ((x.isSuperAdmin || x.isOfficeManager) && canChangeRole) {
+                            <a
+                                color="primary"
+                                mat-button
+                                (click)="pickerFireAt.open()"
+                            >
+                                <small>change</small>
+                            </a>
+                            @if (isShowResetFiredAt) {
+                                <a
+                                    color="primary"
+                                    mat-button
+                                    (click)="fireAtControl.setValue(null)"
+                                >
+                                    <small>reset</small>
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copy -->
+            <div class="d-flex align-items-center">
+                <button
+                    class="ms-auto"
+                    color="primary"
+                    mat-button
+                    type="button"
+                    (click)="onCopyLink(x.directLink)"
+                >
+                    <mat-icon>content_copy</mat-icon>
+                    Copy Link
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex flex-fill flex-column content">
+            <div class="p-4 view-content h-100">
+                <div>
+                    <app-project-calendar
+                        [employeeId]="employeeId"
+                        [filteredProjects]="x.filteredProjects"
+                        (onChangeProjectsForMonth)="onChangeProjectsForMonth($event)"
+                    />
+                </div>
+                <div class="legend-wrapper">
+                    <app-project-legend
+                        [isColumn]="true"
+                        [projectsWithDays]="projectsWithDays"
+                        (selectProject)="onSelectedProject($event)"
+                    />
+                </div>
+            </div>
+        </div>
+    }
+}

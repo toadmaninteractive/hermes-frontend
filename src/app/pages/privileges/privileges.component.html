@@ -1,0 +1,56 @@
+@if (
+    {
+        account: accountService.profile$.asObservable() | async,
+        isSuperadmin: accountService.isSuperAdmin$.asObservable() | async,
+        projects: managingProjects$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex flex-column h-100">
+        <div>
+            <mat-toolbar>
+                <h1>Privileges: {{ x.account.name }}</h1>
+            </mat-toolbar>
+        </div>
+        <div>
+            <mat-list>
+                <mat-list-item>Base Office: {{ x.account.officeName }}</mat-list-item>
+                <mat-list-item>
+                    <span>Is Office Manager: </span>
+
+                    <mat-checkbox
+                        [checked]="x.account.isOfficeManager"
+                        disabled
+                    />
+                </mat-list-item>
+                <mat-list-item>
+                    <span>Is Superadmin: </span>
+                    <mat-checkbox
+                        [checked]="x.account.isSuperadmin"
+                        disabled
+                    />
+                </mat-list-item>
+                <mat-list-item>
+                    <span>Is Blocked: </span>
+                    <mat-checkbox
+                        [checked]="x.account.isBlocked"
+                        disabled
+                    />
+                </mat-list-item>
+                <mat-list-item>
+                    <span>Is Deleted: </span>
+                    <mat-checkbox
+                        [checked]="x.account.isDeleted"
+                        disabled
+                    />
+                </mat-list-item>
+                <mat-list-item>
+                    Managing projects ({{ x.projects.length }}):
+                    @for (project of x.projects; track project) {
+                        <span> &nbsp;{{ project.title }} </span>
+                    }
+                </mat-list-item>
+            </mat-list>
+        </div>
+    </div>
+}

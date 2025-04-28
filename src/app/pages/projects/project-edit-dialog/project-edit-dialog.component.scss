@@ -1,0 +1,19 @@
+::ng-deep .circle {
+    padding: 0 !important;
+
+    border-radius: 0 !important;
+}
+
+::ng-deep .preview {
+    border-radius: 0 !important;
+}
+
+::ng-deep .selected {
+    border-radius: 0 !important;
+}
+
+.color-select {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

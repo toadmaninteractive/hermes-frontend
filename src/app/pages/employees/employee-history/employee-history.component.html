@@ -1,0 +1,74 @@
+@if (
+    {
+        isHistoryEmpty: isHistoryEmpty$.asObservable() | async,
+        history: history$.asObservable() | async,
+        ready: ready$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async
+    };
+    as x
+) {
+    @if (!x.ready) {
+        <mat-spinner class="history-spinner" />
+    }
+    @if (x.ready) {
+        <div>
+            <h3 mat-dialog-title>Employee role changes</h3>
+            <button
+                [disableRipple]="true"
+                class="close"
+                mat-icon-button
+                type="button"
+                (click)="dialogRef.close()"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+        <div mat-dialog-content>
+            @if (!x.isHistoryEmpty) {
+                @for (group of x.history | keyvalue: sortByDate; track group) {
+                    @if (group.value.length) {
+                        <dl class="dialog-list">
+                            <dt class="dialog-list__date">{{ group.value[0].createdAt | date: 'mediumDate' }}</dt>
+                            @for (record of group.value; track record) {
+                                <dd class="d-block history-entry dialog-list__row">
+                                    @if (record.properties['affects'] && record.properties['data']['role']) {
+                                        {{ record.createdAt | date: '[HH:mm]' }}
+                                        <a
+                                            [routerLink]="[
+                                                '/',
+                                                'employees',
+                                                record.actorUsername,
+                                                x.selectedDate.getFullYear(),
+                                                x.selectedDate.getMonth() + 1
+                                            ]"
+                                        >
+                                            {{ record.actorName }}
+                                        </a>
+                                        assigns
+                                        <strong>{{ record.properties['data']['role']['title'] }}</strong>
+                                        role [Visma code:
+                                        <strong>{{ record.properties['data']['role']['code'] }}</strong
+                                        >] to
+                                        <a
+                                            [routerLink]="[
+                                                '/',
+                                                'employees',
+                                                record.properties['affects'][0]['username'],
+                                                x.selectedDate.getFullYear(),
+                                                x.selectedDate.getMonth() + 1
+                                            ]"
+                                        >
+                                            {{ record.properties['affects'][0]['name'] }}
+                                        </a>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    }
+                }
+            } @else {
+                <span> No records found </span>
+            }
+        </div>
+    }
+}

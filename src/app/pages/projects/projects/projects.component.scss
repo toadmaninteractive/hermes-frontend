@@ -1,0 +1,38 @@
+tr.archived {
+    background-color: var(--bs-warning-bg-subtle);
+
+    td:first-of-type {
+        position: relative;
+
+        &::after {
+            content: '';
+
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            width: 4px;
+            height: 100%;
+
+            background-color: var(--bs-warning);
+        }
+    }
+}
+
+.project-color-preview {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+}
+
+// NOTE: bug in material – https://github.com/angular/components/issues/26565
+.mat-mdc-table.mdc-table-fixed-layout {
+    table-layout: fixed;
+}
+
+.filter {
+    width: 220px;
+}

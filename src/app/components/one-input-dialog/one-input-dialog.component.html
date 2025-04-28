@@ -1,0 +1,58 @@
+<div>
+    @if (data?.header) {
+        <h3 mat-dialog-title>{{ data.header }}</h3>
+    }
+    <button
+        [disableRipple]="true"
+        class="close"
+        mat-icon-button
+        type="button"
+        (click)="closeDialog(null)"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+
+    <div mat-dialog-content>
+        <mat-form-field subscriptSizing="dynamic">
+            <mat-label>Reason</mat-label>
+            <input
+                [(ngModel)]="data.input"
+                matInput
+                placeholder="Type reason..."
+            />
+
+            @if (data?.input) {
+                <button
+                    aria-label="Clear"
+                    mat-icon-button
+                    matSuffix
+                    type="button"
+                    (click)="clearInput()"
+                >
+                    <mat-icon>close</mat-icon>
+                </button>
+            }
+        </mat-form-field>
+    </div>
+
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(null)"
+        >
+            Cancel
+        </button>
+        <button
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="closeDialog(data.input)"
+        >
+            Apply
+        </button>
+    </div>
+</div>

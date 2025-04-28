@@ -1,0 +1,183 @@
+@if (
+    {
+        allowedRoles: allowedRolesSet$.asObservable() | async,
+        direction: direction$.asObservable() | async,
+        employees: cacheService.employees$ | async,
+        excludedEmployees: excludedEmployees$.asObservable() | async,
+        linkToExcelReport: linkToExcelReport$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        office: office$.asObservable() | async,
+        officeRoles: roles$.asObservable() | async,
+        participants: participants$.asObservable() | async,
+        privileges: privileges$.asObservable() | async,
+        removedEmployeeId: removedEmployeeId$.asObservable() | async,
+        roles: cacheService.roles$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async,
+        synchronizing: synchronizing$.asObservable() | async,
+        teams: cacheService.teams$.asObservable() | async,
+        timesheet: timesheet$.asObservable() | async,
+        updatedCells: updatedCells$.asObservable() | async,
+        updatedRow: updatedRow$.asObservable() | async,
+        updatedEmployees: updatedEmployees$.asObservable() | async
+    };
+    as x
+) {
+    @if (x.office) {
+        <div>
+            <mat-toolbar>
+                <mat-toolbar-row>
+                    <div class="d-flex align-items-center justify-content-between flex-fill">
+                        <div class="d-flex align-items-center gap-2">
+                            <h1 class="mat-headline-4 m-0 user-select-all">
+                                {{ x.office.name }}
+                            </h1>
+                            <button
+                                color="primary"
+                                mat-button
+                                type="button"
+                                (click)="openSwitchOfficeDialog(x.office.id, x.selectedDate)"
+                            >
+                                Switch office
+                            </button>
+                        </div>
+
+                        <app-month-picker
+                            [keysDirection]="x.direction"
+                            (dateChange)="selectedDateService.selectedDate$.next($event)"
+                        />
+                    </div>
+                </mat-toolbar-row>
+            </mat-toolbar>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between px-3 py-1">
+            <div class="d-flex align-items-center">
+                @if (!x.loading) {
+                    <span class="mat-subtitle-1 m-0">
+                        <mat-icon class="align-middle">people</mat-icon>
+                        <span class="ms-2 align-middle">{{ x.participants }} participants</span>
+                    </span>
+                }
+                @if (x.loading) {
+                    <span>
+                        <app-loading-indicator [isInline]="true" />
+                    </span>
+                }
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <app-prompts-dialog />
+
+                <app-role-warnings
+                    [office]="x.office"
+                    [timesheet]="x.timesheet"
+                />
+            </div>
+        </div>
+
+        <div class="d-flex flex-fill flex-column overflow-hidden">
+            <app-table-grid
+                [canEditCell]="x.privileges?.canEditCell"
+                [enterPressed$]="enterPressedEvent$"
+                [excludedEmployeeFromReport]="x.excludedEmployees"
+                [loading]="x.loading || x.synchronizing"
+                [navDirection$]="navDirection$"
+                [removeRowId]="x.removedEmployeeId"
+                [timesheet]="x.timesheet"
+                [updatedCell]="x.updatedCells"
+                [updatedEmployees]="x.updatedEmployees"
+                [updatedRow]="x.updatedRow"
+                class="office-table"
+                (dblClick)="showCellHistory($event)"
+                (rangeSelected)="onRangeSelected($event)"
+                (rightClick)="openCellAllocateDialog($event)"
+            >
+                <ng-template #menuTemplate>
+                    <app-table-menu
+                        [entity]="x.office"
+                        [isAllCellProtected]="isAllCellProtected(x.timesheet)"
+                        [isAllCellUnprotected]="isAllCellUnprotected(x.timesheet)"
+                        [privileges]="x.privileges"
+                        [synchronizing]="x.synchronizing"
+                        (protect)="certainProtectTimesheet(x.office, x.employees, x.timesheet)"
+                        (regenerate)="onRegenerate(x.selectedDate)"
+                        (showTimesheetHistory)="showTimesheetHistory(x.office, x.selectedDate)"
+                        (synchronize)="onSynchronize(x.office, x.selectedDate)"
+                        (unprotect)="unprotectTimesheet(x.timesheet)"
+                    />
+                </ng-template>
+                <ng-template
+                    #employeeColumn
+                    let-employee="employee"
+                    let-vismaTooltip="vismaTooltip"
+                >
+                    <div
+                        [matTooltip]="vismaTooltip"
+                        appMatTooltipAutoHide
+                        matTooltipClass="f-s-14"
+                    >
+                        <span class="employee-name">{{ employee.name }}</span>
+                        <br />
+                        <strong class="employee-project">
+                            @if (employee.allocatedToProjectId) {
+                                on&nbsp;{{ employee.allocatedToProjectName }}
+                            } @else {
+                                <span class="text-danger">No&nbsp;project</span>
+                            }
+                        </strong>
+                    </div>
+                    <div
+                        [class.readonly]="!x.privileges?.canEditCell"
+                        class="td-action-btns"
+                    >
+                        @if (!employee.roleId) {
+                            <button
+                                appMatTooltipAutoHide
+                                class="text-danger"
+                                mat-icon-button
+                                matTooltip="Assign role"
+                                matTooltipPosition="right"
+                                type="button"
+                                (click)="
+                                    onRoleChange(
+                                        x.roles,
+                                        employee.id,
+                                        $event,
+                                        x.allowedRoles,
+                                        null,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                <mat-icon fontSet="material-icons-outlined">work_off</mat-icon>
+                            </button>
+                        }
+                        @if (employee.roleId && !x.allowedRoles.has(employee.roleId)) {
+                            <button
+                                appMatTooltipAutoHide
+                                class="text-warning cursor-pointer"
+                                mat-icon-button
+                                matTooltip="Employee has incorrect role"
+                                matTooltipClass="f-s-14"
+                                matTooltipPosition="right"
+                                type="button"
+                                (click)="
+                                    onRoleChange(
+                                        x.roles,
+                                        employee.id,
+                                        $event,
+                                        x.allowedRoles,
+                                        employee.roleId,
+                                        x.privileges?.canEditCell
+                                    )
+                                "
+                            >
+                                <mat-icon fontSet="material-icons-outlined">work_off</mat-icon>
+                            </button>
+                        }
+                    </div>
+                </ng-template>
+            </app-table-grid>
+        </div>
+    }
+}

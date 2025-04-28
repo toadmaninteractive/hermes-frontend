@@ -1,0 +1,46 @@
+.comment-input {
+    width: 100%;
+}
+
+.edit-icon {
+    color: rgb(var(--bs-secondary-rgb));
+    vertical-align: middle;
+    &:hover {
+        color: rgb(var(--bs-secondary-rgb) / 90%) !important;
+
+        transition: color 250ms ease-in-out;
+    }
+}
+
+.empty-comment {
+    &:hover {
+        color: rgb(var(--bs-secondary-rgb) / 90%) !important;
+
+        transition: color 250ms ease-in-out;
+
+        .edit-icon {
+            color: rgb(var(--bs-secondary-rgb) / 90%) !important;
+
+            transition: color 250ms ease-in-out;
+        }
+    }
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cell-actions {
+    width: 100px !important;
+}
+
+/* stylelint-disable-next-line selector-pseudo-element-no-unknown */
+::ng-deep .cell-status .mat-sort-header-container {
+    justify-content: center;
+}
+
+.display-none {
+    display: none;
+}

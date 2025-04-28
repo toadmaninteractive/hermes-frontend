@@ -1,0 +1,46 @@
+@if ({ projectsWithDays: projectsWithDays$.asObservable() | async }; as x) {
+    @if (x.projectsWithDays?.length >= 0) {
+        <div class="legend gap-2">
+            <ul
+                [class.flex-column]="isColumn"
+                class="legend-list"
+            >
+                @for (legendItem of x.projectsWithDays; track legendItem) {
+                    <li
+                        [style.background-color]="hexToRgbA(legendItem.project?.color || '#CCCCCC', 0.1)"
+                        [style.border]="'1px solid ' + calculateColor(legendItem.project)"
+                        [style.opacity]="
+                            selectedProjectsId.size === 0 || selectedProjectsId.has(legendItem.project.id) ? 1 : 0.4
+                        "
+                        class="legend-element"
+                        (click)="onHighlightProject(legendItem.project.id)"
+                    >
+                        <span
+                            [style.background-color]="calculateColor(legendItem.project)"
+                            class="legend-element__letter"
+                        >
+                            {{ legendItem.project.title | uppercase | slice: 0 : 1 }}
+                        </span>
+                        {{ legendItem.project.title | slice: 1 }}
+                        <div
+                            [style.background-color]="hexToRgbA(legendItem.project?.color || '#CCCCCC', 0.8)"
+                            class="badge"
+                        >
+                            {{ legendItem.days }}
+                        </div>
+                    </li>
+                }
+            </ul>
+            @if (selectedProjectsId.size !== 0) {
+                <button
+                    color="warn"
+                    mat-stroked-button
+                    type="button"
+                    (click)="deselectElements()"
+                >
+                    Reset
+                </button>
+            }
+        </div>
+    }
+}

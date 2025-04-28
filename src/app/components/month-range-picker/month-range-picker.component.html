@@ -1,0 +1,206 @@
+@if (
+    {
+        currentStartDate: currentStartDate$.asObservable() | async,
+        currentEndDate: currentEndDate$.asObservable() | async,
+        startDate: startDate$.asObservable() | async,
+        endDate: endDate$.asObservable() | async,
+        showMonthMenu: showMonthMenu$.asObservable() | async
+    };
+    as x
+) {
+    <mat-form-field
+        #trigger="cdkOverlayOrigin"
+        cdkOverlayOrigin
+        subscriptSizing="dynamic"
+        (click)="onToggleMonthMenuStart(!x.showMonthMenu)"
+    >
+        <mat-label>{{ label }}</mat-label>
+
+        <input
+            [value]="(x.startDate | date: 'LLLL, yyyy') + '-' + (x.endDate | date: 'LLLL, yyyy')"
+            mat-input
+            matInput
+            readonly
+            style="display: none"
+        />
+
+        <button
+            [class.date-trigger_active]="state === pickerState.startMonth || state === pickerState.startYear"
+            class="date-trigger date-trigger_start"
+            type="button"
+        >
+            {{ x.startDate | date: 'LLLL, yyyy' }}
+        </button>
+        <mat-icon class="align-middle">arrow_right_alt</mat-icon>
+
+        <button
+            [class.date-trigger_active]="state === pickerState.endMonth || state === pickerState.endYear"
+            class="date-trigger date-trigger_end"
+            type="button"
+            (click)="$event.stopPropagation(); onToggleMonthMenuEnd(!x.showMonthMenu)"
+        >
+            {{ x.endDate | date: 'LLLL, yyyy' }}
+        </button>
+
+        <mat-icon
+            class="text-muted"
+            matSuffix
+            >calendar_month</mat-icon
+        >
+    </mat-form-field>
+
+    <ng-template
+        [cdkConnectedOverlayOpen]="x.showMonthMenu"
+        [cdkConnectedOverlayOrigin]="trigger"
+        cdkConnectedOverlay
+        cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+        cdkConnectedOverlayHasBackdrop
+        (backdropClick)="rangeClickOutsideHandler()"
+    >
+        <div
+            class="panel"
+            role="menu"
+        >
+            <div class="mat-mdc-menu-content">
+                @switch (state) {
+                    @case (pickerState.startMonth) {
+                        <header class="calendar__header">
+                            <button
+                                [disabled]="x.startDate.getFullYear() <= leftBorderYear"
+                                mat-icon-button
+                                type="button"
+                                (click)="onSelectYearStart(x.startDate, x.startDate.getFullYear() - 1)"
+                            >
+                                <mat-icon>chevron_left</mat-icon>
+                            </button>
+                            <button
+                                mat-button
+                                type="button"
+                                (click)="state = pickerState.startYear"
+                            >
+                                {{ x.startDate | date: 'yyyy' }}
+                            </button>
+                            <button
+                                [disabled]="x.startDate.getFullYear() === x.endDate.getFullYear()"
+                                mat-icon-button
+                                type="button"
+                                (click)="onSelectYearStart(x.startDate, x.startDate.getFullYear() + 1)"
+                            >
+                                <mat-icon>chevron_right</mat-icon>
+                            </button>
+                        </header>
+                        <div class="calendar__body">
+                            @for (month of monthsList; track month) {
+                                <button
+                                    [class.body__button_active]="x.startDate.getMonth() === month"
+                                    [class.body__button_current]="x.currentStartDate.getMonth() === month"
+                                    [color]="x.startDate.getMonth() === month ? 'primary' : null"
+                                    [disabled]="isStartMonthDisabled(x.startDate, x.endDate, month)"
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="onSelectMonthStart(x.startDate, month)"
+                                >
+                                    {{ alterDate(x.startDate, month) | date: 'LLL' }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    @case (pickerState.endMonth) {
+                        <header class="calendar__header">
+                            <button
+                                [disabled]="x.startDate.getFullYear() === x.endDate.getFullYear()"
+                                mat-icon-button
+                                type="button"
+                                (click)="onSelectYearEnd(x.endDate, x.endDate.getFullYear() - 1)"
+                            >
+                                <mat-icon>chevron_left</mat-icon>
+                            </button>
+                            <button
+                                mat-button
+                                type="button"
+                                (click)="state = pickerState.endYear"
+                            >
+                                {{ x.endDate | date: 'yyyy' }}
+                            </button>
+                            <button
+                                [disabled]="x.endDate.getFullYear() >= yearsList[yearsList.length - 1]"
+                                mat-icon-button
+                                type="button"
+                                (click)="onSelectYearEnd(x.endDate, x.endDate.getFullYear() + 1)"
+                            >
+                                <mat-icon>chevron_right</mat-icon>
+                            </button>
+                        </header>
+                        <div class="calendar__body">
+                            @for (month of monthsList; track month) {
+                                <button
+                                    [class.body__button_active]="x.endDate.getMonth() === month"
+                                    [class.body__button_current]="x.currentEndDate.getMonth() === month"
+                                    [color]="x.endDate.getMonth() === month ? 'primary' : null"
+                                    [disabled]="isEndMonthDisabled(x.startDate, x.endDate, month)"
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="onSelectMonthEnd(x.endDate, month)"
+                                >
+                                    {{ alterDate(x.startDate, month) | date: 'LLL' }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    @case (pickerState.startYear) {
+                        <header class="calendar__header justify-content-center">
+                            <button
+                                mat-button
+                                type="button"
+                                (click)="state = pickerState.startYear"
+                            >
+                                {{ yearsList[0] }} - {{ yearsList[yearsList.length - 1] }}
+                            </button>
+                        </header>
+                        <div class="calendar__body">
+                            @for (year of yearsList; track year) {
+                                <button
+                                    [class.body__button_active]="x.startDate.getFullYear() === year"
+                                    [class.body__button_current]="x.currentStartDate.getFullYear() === year"
+                                    [color]="x.startDate.getFullYear() === year ? 'primary' : null"
+                                    [disabled]="year > x.endDate.getFullYear()"
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="onSelectYearStart(x.startDate, year)"
+                                >
+                                    {{ year }}
+                                </button>
+                            }
+                        </div>
+                    }
+                    @case (pickerState.endYear) {
+                        <header class="calendar__header justify-content-center">
+                            <button
+                                mat-button
+                                type="button"
+                                (click)="state = pickerState.endYear"
+                            >
+                                {{ yearsList[0] }} - {{ yearsList[yearsList.length - 1] }}
+                            </button>
+                        </header>
+                        <div class="calendar__body">
+                            @for (year of yearsList; track year) {
+                                <button
+                                    [class.body__button_active]="x.endDate.getFullYear() === year"
+                                    [class.body__button_current]="x.currentEndDate.getFullYear() === year"
+                                    [color]="x.endDate.getFullYear() === year ? 'primary' : null"
+                                    [disabled]="year < x.startDate.getFullYear()"
+                                    mat-flat-button
+                                    type="button"
+                                    (click)="onSelectYearEnd(x.endDate, year)"
+                                >
+                                    {{ year }}
+                                </button>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </ng-template>
+}

@@ -1,0 +1,74 @@
+.custom-toggle {
+    position: relative;
+
+    display: flex;
+    width: 110px;
+    height: 36px;
+
+    background-color: rgb(222 226 230 / 100%);
+
+    border-radius: 4px;
+
+    pointer-events: none;
+
+    &::after {
+        content: '';
+
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        bottom: 2px;
+        left: calc(50% + 2px);
+
+        background-color: rgb(255 255 255 / 100%);
+
+        border-radius: 4px;
+
+        transition: all 225ms;
+    }
+
+    &__element {
+        position: relative;
+        z-index: 2;
+
+        flex: 1;
+        padding: 2px;
+
+        background-color: transparent;
+
+        border: none;
+        border-radius: 4px;
+
+        user-select: none;
+
+        &:first-child {
+            color: rgb(176 190 197 / 100%);
+
+            pointer-events: auto;
+        }
+
+        &:last-child {
+            color: rgb(2 136 209 / 100%);
+
+            pointer-events: none;
+        }
+    }
+}
+.custom-toggle_csv {
+    &.custom-toggle::after {
+        right: calc(50% + 2px);
+        left: 2px;
+    }
+
+    .custom-toggle__element:first-child {
+        color: rgb(2 136 209 / 100%);
+
+        pointer-events: none;
+    }
+
+    .custom-toggle__element:last-child {
+        color: rgb(176 190 197 / 100%);
+
+        pointer-events: auto;
+    }
+}

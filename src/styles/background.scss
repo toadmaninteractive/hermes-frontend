@@ -1,0 +1,108 @@
+//
+// Custom background helpers
+//
+
+// Background color transparent
+.bg-transparent {
+    background-color: transparent;
+}
+
+.bg-transparent-i {
+    background-color: transparent !important;
+}
+
+// Background size
+.bgi-size-length {
+    background-size: length;
+}
+
+.bgi-size-cover {
+    background-size: cover;
+}
+
+.bgi-size-contain {
+    background-size: contain;
+}
+
+// Background repeat
+.bgi-no-repeat {
+    background-repeat: no-repeat;
+}
+
+// Background positions
+.bgi-position-y-top {
+    background-position-y: top;
+}
+
+.bgi-position-y-bottom {
+    background-position-y: bottom;
+}
+
+.bgi-position-y-center {
+    background-position-y: center;
+}
+
+.bgi-position-x-left {
+    background-position-x: left;
+}
+
+.bgi-position-x-right {
+    background-position-x: right;
+}
+
+.bgi-position-x-center {
+    background-position-x: center;
+}
+
+.bgi-position-top {
+    background-position: 0 top;
+}
+
+.bgi-position-bottom {
+    background-position: 0 bottom;
+}
+
+.bgi-position-center {
+    background-position: center;
+}
+
+// Diagonal Background
+.bg-diagonal {
+    position: relative;
+
+    overflow: hidden;
+    background-color: $white;
+
+    &::before {
+        content: ' ';
+
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        background-color: $gray-100;
+    }
+
+    &::after {
+        content: ' ';
+
+        position: absolute;
+        top: 0;
+        left: 45%;
+        z-index: 1;
+
+        width: 200%;
+        height: 1000px;
+
+        background-color: $white;
+
+        transform: rotate(20deg);
+    }
+
+    .card-body {
+        position: relative;
+        z-index: 2;
+    }
+}

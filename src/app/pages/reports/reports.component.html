@@ -1,0 +1,438 @@
+@if (
+    {
+        username: (accountService.profile$.asObservable() | async).username,
+        editingSet: editCommentSet$.asObservable() | async,
+        employees: cacheService.employees$.asObservable() | async,
+        loading: loading$.asObservable() | async,
+        office: office$.asObservable() | async,
+        reports: reports$.asObservable() | async,
+        selectedDate: date$.asObservable() | async,
+        selectedOffice: cacheService.selectedOffice$.asObservable() | async,
+        statusMap: statusMap$.asObservable() | async,
+        initPicker: initPicker$.asObservable() | async
+    };
+    as x
+) {
+    @if (x.selectedDate) {
+        <div class="d-flex flex-column h-100">
+            <div>
+                <mat-toolbar>
+                    <div class="d-flex justify-content-between gap-3 flex-fill">
+                        <div class="d-flex align-items-center gap-3">
+                            <span>Reports</span>
+                            <button
+                                appMatTooltipAutoHide
+                                color="primary"
+                                mat-mini-fab
+                                matTooltip="Create Visma report"
+                                matTooltipClass="media-tooltip"
+                                type="button"
+                                (click)="saveReport($any(x.selectedOffice), x.selectedDate)"
+                            >
+                                <span
+                                    [cacheSVG]="true"
+                                    [inlineSVG]="'./assets/media/logos/visma-logo.svg'"
+                                ></span>
+                            </button>
+                            <button
+                                appMatTooltipAutoHide
+                                color="primary"
+                                mat-mini-fab
+                                matTooltip="Download Role summary report"
+                                matTooltipClass="media-tooltip"
+                                type="button"
+                                (click)="openRoleReportDialog($any(x.selectedOffice).id, x.selectedDate)"
+                            >
+                                <mat-icon>business_center</mat-icon>
+                            </button>
+
+                            <button
+                                appMatTooltipAutoHide
+                                color="primary"
+                                mat-mini-fab
+                                matTooltip="Download BDO report"
+                                matTooltipClass="media-tooltip"
+                                type="button"
+                                (click)="openBDOReportDialog($any(x.selectedOffice).id, x.selectedDate)"
+                            >
+                                <span
+                                    [cacheSVG]="true"
+                                    [inlineSVG]="'./assets/media/logos/bdo-logo.svg'"
+                                ></span>
+                            </button>
+                            <button
+                                [appConfirmConfig]="{
+                                    data: {
+                                        title: 'Confirmation',
+                                        confirmText: 'Download',
+                                        html:
+                                            'Are you sure you want to download <b>Allocation per project report</b> for <b>all employees</b> for ' +
+                                            '<b>' +
+                                            (x.selectedDate | date: 'LLLL yyyy') +
+                                            '</b>?'
+                                    }
+                                }"
+                                appMatTooltipAutoHide
+                                color="primary"
+                                mat-mini-fab
+                                matTooltip="Download allocation per project report"
+                                matTooltipClass="media-tooltip"
+                                type="button"
+                                (confirm)="downloadAllocationPerProject(x.selectedDate)"
+                            >
+                                <mat-icon>summarize</mat-icon>
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <app-office-selector
+                                [hideCommonOptions]="true"
+                                [noCache]="true"
+                                [section]="pageTag"
+                                [username]="x.username"
+                                (officeChanged)="onNavigate(x.selectedDate, $any($event))"
+                            />
+                            <app-month-picker
+                                [section]="pageTag"
+                                [username]="x.username"
+                                (dateChange)="onDateChange($event)"
+                            />
+                        </div>
+                    </div>
+                </mat-toolbar>
+            </div>
+
+            <main
+                class="h-100 d-flex justify-content-between flex-column"
+                with-scroll-top
+            >
+                @if (x.reports.length) {
+                    <table
+                        [dataSource]="dataSource"
+                        [matSortActive]="sortBy"
+                        [matSortDirection]="sortDir"
+                        class="table w-100"
+                        mat-table
+                        matSort
+                        matSortDisableClear
+                        (matSortChange)="sortTable($event, x.username)"
+                    >
+                        <!-- ID column -->
+                        <ng-container [matColumnDef]="column.Id">
+                            <th
+                                *matHeaderCellDef
+                                [mat-sort-header]="column.Id"
+                                class="cell-id"
+                                mat-header-cell
+                            >
+                                ID
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                <strong>{{ report.id }}</strong>
+                            </td>
+                        </ng-container>
+                        <!-- Omitted column -->
+                        <ng-container [matColumnDef]="column.Omitted">
+                            <th
+                                *matHeaderCellDef
+                                class="cell-name"
+                                mat-header-cell
+                            >
+                                Excluded employees
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                <div class="d-flex align-items-center">
+                                    <ul class="list-unstyled">
+                                        @for (omitted of report.omitIds; track omitted) {
+                                            <li>
+                                                @if (x.employees && x.selectedDate) {
+                                                    <a
+                                                        [routerLink]="[
+                                                            '/',
+                                                            'employees',
+                                                            getUsername(x.employees, omitted),
+                                                            x.selectedDate.getFullYear(),
+                                                            x.selectedDate.getMonth() + 1
+                                                        ]"
+                                                    >
+                                                        <strong>{{ getName(x.employees, omitted) }}</strong>
+                                                    </a>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </td>
+                        </ng-container>
+                        <!-- Comment column -->
+                        <ng-container [matColumnDef]="column.Comment">
+                            <th
+                                *matHeaderCellDef
+                                mat-header-cell
+                            >
+                                Comment
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                <div class="d-flex align-items-center justify-content-start">
+                                    <input
+                                        [class.display-none]="!x.editingSet.has(report.id)"
+                                        [id]="'comment-' + report.id"
+                                        [value]="report.comment"
+                                        class="comment-input"
+                                        mat-input
+                                        type="text"
+                                        (blur)="
+                                            updateReportComment(
+                                                $any($event.target).value,
+                                                report.id,
+                                                x.editingSet,
+                                                x.reports
+                                            )
+                                        "
+                                        (keydown.enter)="
+                                            updateReportComment(
+                                                $any($event.target).value,
+                                                report.id,
+                                                x.editingSet,
+                                                x.reports
+                                            )
+                                        "
+                                        (keydown.escape)="onFinishEditing(report.id, x.editingSet)"
+                                    />
+                                    <!---->
+                                    @if (!x.editingSet.has(report.id)) {
+                                        @if (report.comment) {
+                                            <span>{{ report.comment }}</span>
+                                            <span
+                                                appMatTooltipAutoHide
+                                                class="ms-1 material-icons-outlined cursor-pointer edit-icon"
+                                                matTooltip="Click to edit"
+                                                (click)="onStartEditing(report.id, x.editingSet)"
+                                            >
+                                                drive_file_rename_outline
+                                            </span>
+                                        }
+                                        @if (!report.comment) {
+                                            <span
+                                                appMatTooltipAutoHide
+                                                class="text-muted empty-comment cursor-pointer"
+                                                matTooltip="Click to add comment"
+                                                (click)="onStartEditing(report.id, x.editingSet)"
+                                            >
+                                                <span>No comment</span
+                                                ><span class="ms-1 material-icons-outlined cursor-pointer edit-icon">
+                                                    drive_file_rename_outline
+                                                </span>
+                                            </span>
+                                        }
+                                    }
+                                </div>
+                            </td>
+                        </ng-container>
+                        <!-- Created By column -->
+                        <ng-container [matColumnDef]="column.CreatedBy">
+                            <th
+                                *matHeaderCellDef
+                                [mat-sort-header]="column.CreatedBy"
+                                class="cell-title"
+                                mat-header-cell
+                            >
+                                Created By
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                <div class="d-flex align-items-center">
+                                    <a
+                                        [routerLink]="[
+                                            '/',
+                                            'employees',
+                                            report.createdByUsername,
+                                            x.selectedDate.getFullYear(),
+                                            x.selectedDate.getMonth() + 1
+                                        ]"
+                                    >
+                                        <strong>{{ report.createdByName }}</strong>
+                                    </a>
+                                </div>
+                            </td>
+                        </ng-container>
+                        <!-- Created At column -->
+                        <ng-container [matColumnDef]="column.CreatedAt">
+                            <th
+                                *matHeaderCellDef
+                                [mat-sort-header]="column.CreatedAt"
+                                class="cell-datetime"
+                                mat-header-cell
+                            >
+                                Created At
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                {{ report.createdAt | date: 'yyyy-MM-dd hh:mm' }}
+                            </td>
+                        </ng-container>
+                        <!-- Delivered Status column -->
+                        <ng-container [matColumnDef]="column.DeliveryStatus">
+                            <th
+                                *matHeaderCellDef
+                                [mat-sort-header]="column.DeliveryStatus"
+                                class="cell-status text-center"
+                                mat-header-cell
+                            >
+                                Delivery Status
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                class="text-center"
+                                mat-cell
+                            >
+                                <div class="buttons-group">
+                                    @if (x.office.vismaCompanyId || x.office.vismaCountry || report.deliveryData) {
+                                        @if (!x.statusMap.has(report.id)) {
+                                            <button
+                                                [matTooltip]="
+                                                    !x.office.vismaCompanyId
+                                                        ? 'Visma company id or visma country for office is empty, please fill to enable sending'
+                                                        : null
+                                                "
+                                                appMatTooltipAutoHide
+                                                color="primary"
+                                                mat-button
+                                                type="button"
+                                                (click)="onSendReport(report.id, x.statusMap)"
+                                            >
+                                                <span>Send</span>
+                                            </button>
+                                        }
+                                    } @else {
+                                        <span
+                                            [matTooltip]="
+                                                'Visma company id or visma country for office is empty, please fill to enable sending'
+                                            "
+                                            appMatTooltipAutoHide
+                                            class="text-danger"
+                                        >
+                                            Incorrect Visma
+                                        </span>
+                                    }
+                                    @if (x.statusMap.has(report.id)) {
+                                        @if (report.deliveryData) {
+                                            <button
+                                                [routerLink]="'/reports/' + report.id + '/logs'"
+                                                appMatTooltipAutoHide
+                                                color="primary"
+                                                mat-button
+                                                matTooltip="Click to open logs"
+                                                type="button"
+                                            >
+                                                <span [class]="getColorStatus(x.statusMap.get(report.id))">
+                                                    {{ getStatusDescription(x.statusMap.get(report.id)) }}
+                                                </span>
+                                            </button>
+                                        }
+                                        @if (!report.deliveryData) {
+                                            <span> {{ getStatusDescription(x.statusMap.get(report.id)) }} </span>
+                                        }
+                                        <button
+                                            appMatTooltipAutoHide
+                                            color="primary"
+                                            mat-button
+                                            matTooltip="Click to update"
+                                            matTooltipPosition="above"
+                                            type="button"
+                                            (click)="onUpdateDeliveryStatus(report.id, x.statusMap)"
+                                        >
+                                            <span class="material-icons light f-s-16">autorenew</span>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </ng-container>
+                        <!-- Delivered At column -->
+                        <ng-container [matColumnDef]="column.DeliveredAt">
+                            <th
+                                *matHeaderCellDef
+                                [mat-sort-header]="column.DeliveredAt"
+                                class="cell-datetime"
+                                mat-header-cell
+                            >
+                                Delivered At
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                {{ report.deliveredAt | date: 'yyyy-MM-dd hh:mm' }}
+                            </td>
+                        </ng-container>
+                        <!-- Actions column -->
+                        <ng-container [matColumnDef]="column.Actions">
+                            <th
+                                *matHeaderCellDef
+                                class="cell-actions text-center"
+                                mat-header-cell
+                            >
+                                Actions
+                            </th>
+                            <td
+                                *matCellDef="let report"
+                                mat-cell
+                            >
+                                <a
+                                    [href]="reportService.baseUrl + '/api/reports/visma/' + report.id + '/download'"
+                                    color="primary"
+                                    download
+                                    mat-flat-button
+                                >
+                                    <span>Download</span>
+                                </a>
+                            </td>
+                        </ng-container>
+                        <!-- Table rows -->
+                        <tr
+                            *matHeaderRowDef="displayedColumns; sticky: true"
+                            mat-header-row
+                        ></tr>
+                        <tr
+                            *matRowDef="let row; columns: displayedColumns"
+                            mat-row
+                        ></tr>
+                    </table>
+                }
+                @if (dataSource?.data?.length === 0) {
+                    <div class="indicator">
+                        @switch (x.loading) {
+                            @case (true) {
+                                <app-loading-indicator [isInline]="true" />
+                            }
+                            @case (false) {
+                                <span>No reports found</span>
+                            }
+                        }
+                    </div>
+                }
+            </main>
+            <mat-paginator
+                [length]="dataSource?.filteredData?.length"
+                [pageIndex]="pageIndex"
+                [pageSize]="pageSize"
+                [pageSizeOptions]="pageSizes"
+                class="paginator-fixed mat-elevation-z2"
+                showFirstLastButtons
+                (page)="paginatorChanged($event, x.username)"
+            />
+        </div>
+    }
+}

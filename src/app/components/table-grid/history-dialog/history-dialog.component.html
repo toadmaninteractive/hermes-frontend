@@ -1,0 +1,112 @@
+@if (
+    {
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async,
+        employees: cacheService.employees$.asObservable() | async,
+        isHistoryEmpty: isHistoryEmpty$.asObservable() | async,
+        history: history$.asObservable() | async,
+        historyDisplay: historyDisplay$.asObservable() | async,
+        ready: ready$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>Action history</h3>
+    </div>
+    <button
+        [disableRipple]="true"
+        class="close"
+        mat-icon-button
+        type="button"
+        (click)="dialogRef.close()"
+    >
+        <mat-icon>close</mat-icon>
+    </button>
+    <div mat-dialog-content>
+        @if (!x.ready) {
+            <mat-spinner class="history-spinner" />
+        }
+        @if (x.ready && x.employees?.length > 0) {
+            <mat-form-field>
+                <input
+                    [ngModel]="needle"
+                    matInput
+                    placeholder="Type to filter..."
+                    (ngModelChange)="onFilter($event, x.history)"
+                />
+                @if (needle) {
+                    <button
+                        aria-label="Clear"
+                        mat-icon-button
+                        matSuffix
+                        type="button"
+                        (click)="onFilter('', null)"
+                    >
+                        <mat-icon>close</mat-icon>
+                    </button>
+                }
+            </mat-form-field>
+            @if (!x.isHistoryEmpty) {
+                <div class="dialog-list__wrapper">
+                    @for (group of x.historyDisplay | keyvalue: sortByDate; track group) {
+                        @if (group.value.length) {
+                            <dl class="dialog-list">
+                                <dt class="dialog-list__date">{{ group.value[0].createdAt | date: 'mediumDate' }}</dt>
+                                @for (row of group.value | sort: sortByTime; track row) {
+                                    <dd class="dialog-list__row">
+                                        <div class="left">
+                                            <span class="time">[{{ row.createdAt | date: 'HH:mm' }}]</span>
+                                        </div>
+                                        <div class="right">
+                                            @switch (row.actor) {
+                                                @case (actor.User) {
+                                                    <a
+                                                        [href]="
+                                                            '/employees/' +
+                                                            row.actorUsername +
+                                                            '/' +
+                                                            x.selectedDate.getFullYear() +
+                                                            '/' +
+                                                            (x.selectedDate.getMonth() + 1)
+                                                        "
+                                                        [matTooltip]="getUserTooltip(row.actorId, x.employees)"
+                                                        appMatTooltipAutoHide
+                                                        matTooltipPosition="above"
+                                                        target="_blank"
+                                                    >
+                                                        {{ row.actorName }}
+                                                    </a>
+                                                    <app-hermes-action
+                                                        [data]="row"
+                                                        [employees]="x.employees"
+                                                    />
+                                                }
+                                                @case (actor.Robot) {
+                                                    Automatic
+                                                    <app-hermes-action
+                                                        [data]="row"
+                                                        [employees]="x.employees"
+                                                    />
+                                                }
+                                                @case (actor.Anonymous) {
+                                                    Unknown (anonymous)
+                                                    <app-hermes-action
+                                                        [data]="row"
+                                                        [employees]="x.employees"
+                                                    />
+                                                }
+                                            }
+                                        </div>
+                                    </dd>
+                                }
+                            </dl>
+                        }
+                    }
+                </div>
+            } @else {
+                <div class="mt-5">
+                    <span class="f-s-14">No records found</span>
+                </div>
+            }
+        }
+    </div>
+}

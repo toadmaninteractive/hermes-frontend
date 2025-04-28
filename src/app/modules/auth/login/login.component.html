@@ -1,0 +1,58 @@
+<div class="login-form login-signin">
+    <form
+        [formGroup]="loginForm"
+        class="form"
+        novalidate="novalidate"
+        (ngSubmit)="submit()"
+    >
+        <div class="pb-13 pt-lg-0 pt-5">
+            <h1>Welcome to Hermes</h1>
+        </div>
+
+        @if (signInError || hasError) {
+            <div class="mb-10 alert alert-danger">
+                <div class="alert-text">{{ this.signInError || 'another error' }}</div>
+            </div>
+        }
+
+        <mat-form-field>
+            <mat-label>Username</mat-label>
+            <input
+                [ngClass]="{ 'is-invalid': loginForm.controls.username.invalid }"
+                autocomplete="off"
+                class="form-control form-control-solid h-auto py-7 px-6 rounded-lg"
+                formControlName="username"
+                matInput
+                name="username"
+                type="text"
+            />
+        </mat-form-field>
+
+        <mat-form-field>
+            <mat-label>Password</mat-label>
+            <input
+                [ngClass]="{ 'is-invalid': loginForm.controls.password.invalid }"
+                autocomplete="off"
+                formControlName="password"
+                matInput
+                name="password"
+                type="password"
+            />
+        </mat-form-field>
+
+        <div class="d-flex justify-content-between align-items-center pb-lg-0 pb-5">
+            <button
+                [disabled]="loginForm.invalid"
+                color="primary"
+                mat-flat-button
+                type="submit"
+            >
+                Sign In
+            </button>
+
+            @if (isLoading$ | async) {
+                <mat-spinner diameter="30" />
+            }
+        </div>
+    </form>
+</div>

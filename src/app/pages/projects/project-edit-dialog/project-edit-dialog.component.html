@@ -1,0 +1,215 @@
+@if (
+    {
+        loading: loading$.asObservable() | async,
+        changed: changed$.asObservable() | async,
+        offices: offices$ | async,
+        supervisors: supervisors$ | async,
+        taskKindList: taskKindList$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>{{ data ? 'Edit project' : 'New project' }}</h3>
+
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <form
+            [formGroup]="projectForm"
+            [ngClass]="{ 'text-muted': x.loading }"
+        >
+            <fieldset
+                [disabled]="x.loading"
+                class="d-flex flex-column gap-3"
+            >
+                <!--
+        <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+        -->
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Project title</mat-label>
+                    <input
+                        [formControlName]="fields.Title"
+                        matInput
+                        placeholder="Project title"
+                        required
+                    />
+                    <mat-hint align="start"> Unique title to identify this project</mat-hint>
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Project URL key</mat-label>
+                    <input
+                        [formControlName]="fields.Key"
+                        matInput
+                        placeholder="Project URL key"
+                        required
+                    />
+                    <mat-hint>
+                        Follow these rules to define unique project key:<br />
+                        &ndash; it should contain lowercase latin letters, digits, dash and underscore<br />
+                        &ndash; think twice: it is not recommended to change this key later
+                    </mat-hint>
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Leading office</mat-label>
+                    <mat-select
+                        [formControlName]="fields.LeadingOfficeId"
+                        placeholder="LeadingOffice"
+                        required
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                [formControl]="officeFilterControl"
+                                noEntriesFoundLabel="No offices match the search criteria"
+                                placeholderLabel="Type in to filter..."
+                            />
+                        </mat-option>
+                        @for (office of x.offices; track office) {
+                            <mat-option [value]="office.id">
+                                {{ office.name }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Supervisor</mat-label>
+                    <mat-select
+                        [formControlName]="fields.SupervisorId"
+                        placeholder="Supervisor"
+                    >
+                        <mat-option>
+                            <ngx-mat-select-search
+                                [formControl]="supervisorFilterControl"
+                                noEntriesFoundLabel="No employees match the search criteria"
+                                placeholderLabel="Type in to filter..."
+                            />
+                        </mat-option>
+                        @for (supervisor of x.supervisors; track supervisor) {
+                            <mat-option [value]="supervisor.id">
+                                {{ supervisor.name }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Finance code</mat-label>
+                    <input
+                        [formControlName]="fields.FinanceCode"
+                        matInput
+                        placeholder="Finance code"
+                        required
+                    />
+                </mat-form-field>
+
+                <mat-checkbox
+                    [disableRipple]="true"
+                    [formControlName]="fields.Invoiceable"
+                >
+                    Invoiceable
+                </mat-checkbox>
+
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Task kind</mat-label>
+                    <mat-select [formControlName]="fields.TaskCode">
+                        @for (option of x.taskKindList | keyvalue; track option) {
+                            <mat-option [value]="option.key">
+                                {{ option.value }}
+                            </mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Started at</mat-label>
+                    <input
+                        [formControlName]="fields.StartedAt"
+                        [matDatepicker]="pickerStart"
+                        [min]="minDatePicker"
+                        matInput
+                    />
+                    <mat-hint>MM/DD/YYYY</mat-hint>
+                    <mat-datepicker-toggle
+                        [for]="pickerStart"
+                        matSuffix
+                    />
+                    <mat-datepicker #pickerStart />
+                    @if (projectForm.get(fields.StartedAt).hasError('forbiddenStartedDate')) {
+                        <mat-error> Started at date should be less than finished date </mat-error>
+                    }
+                </mat-form-field>
+                <mat-form-field subscriptSizing="dynamic">
+                    <mat-label>Finished at</mat-label>
+                    <input
+                        [formControlName]="fields.FinishedAt"
+                        [matDatepicker]="pickerFinish"
+                        [min]="minDatePicker"
+                        matInput
+                    />
+                    <mat-hint>MM/DD/YYYY</mat-hint>
+                    <mat-datepicker-toggle
+                        [for]="pickerFinish"
+                        matSuffix
+                    />
+                    <mat-datepicker
+                        #pickerFinish
+                        [startAt]=""
+                    />
+                    @if (projectForm.get(fields.FinishedAt).hasError('forbiddenFinishDate')) {
+                        <mat-error> Finished at date should be greater than started date </mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-checkbox
+                    [disableRipple]="true"
+                    [formControlName]="fields.IsArchived"
+                >
+                    <span>Archived</span>
+                </mat-checkbox>
+                <div class="color-select">
+                    <ngx-colors
+                        [formControlName]="fields.Color"
+                        [palette]="colorPalette"
+                        ngx-colors-trigger
+                    />
+                    <mat-form-field subscriptSizing="dynamic">
+                        <mat-label>Color</mat-label>
+                        <input
+                            [formControl]="colorInputControl"
+                            matInput
+                            required
+                        />
+                    </mat-form-field>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            [mat-dialog-close]="null"
+            cdkFocusInitial
+            color="warn"
+            mat-button
+            type="button"
+        >
+            No, thanks
+        </button>
+        <button
+            [disabled]="x.loading || !x.changed || !validateForm()"
+            color="primary"
+            mat-flat-button
+            type="button"
+            (click)="onSave()"
+        >
+            {{ data ? 'Update project' : 'Create project' }}
+        </button>
+    </div>
+}

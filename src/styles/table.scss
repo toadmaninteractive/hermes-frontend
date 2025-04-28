@@ -1,0 +1,150 @@
+.cell-id {
+    width: 66px;
+
+    &.deleted {
+        box-shadow: inset 4px 0 0 0 var(--bs-danger);
+    }
+}
+
+.cell-name {
+    width: 200px;
+}
+
+.cell-project-name {
+    width: 330px;
+}
+
+.cell-code {
+    width: 130px;
+}
+
+.cell-title {
+    width: 200px;
+}
+
+.cell-members {
+    width: 500px;
+}
+
+.cell-supervisor {
+    width: 200px;
+}
+
+.cell-position {
+    width: 350px;
+}
+
+.cell-country {
+    width: 200px;
+}
+
+.cell-datetime {
+    width: 145px;
+}
+
+.cell-status {
+    width: 200px;
+}
+
+.cell-archive {
+    width: 88px;
+}
+
+.cell-actions {
+    width: 100px;
+}
+
+.cell-summary {
+    width: 100px;
+}
+
+tr.deleted {
+    background-color: var(--bs-danger-bg-subtle);
+}
+
+.empty-table {
+    display: flex;
+    flex-direction: column;
+}
+
+.indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 16px 0;
+}
+
+.td-action-btns {
+    position: absolute;
+    top: 0;
+    right: 2px;
+    bottom: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+
+    .remove-icon {
+        width: 0;
+
+        color: var(--bs-danger);
+        opacity: 0;
+
+        transition:
+            opacity 125ms,
+            width 125ms;
+    }
+
+    .highlight-icon {
+        width: 0;
+
+        opacity: 0;
+
+        transition:
+            opacity 125ms,
+            width 125ms;
+    }
+}
+
+.stars-wrap {
+    display: flex;
+    flex-direction: row-reverse;
+
+    .star {
+        font-weight: 400;
+
+        text-shadow: 0.02rem 0.02rem 2px black;
+
+        transition: font-weight 250ms;
+
+        cursor: pointer;
+
+        &:not(:last-child) {
+            margin-left: -13px;
+        }
+    }
+}
+
+.employee {
+    &-name {
+        font-size: 13px;
+
+        transition: font-size 125ms;
+
+        @media (width <= 1600px) {
+            font-size: 10px;
+        }
+    }
+
+    &-project {
+        font-size: 13px;
+
+        transition: font-size 125ms;
+
+        @media (width <= 1600px) {
+            font-size: 10px;
+        }
+    }
+}

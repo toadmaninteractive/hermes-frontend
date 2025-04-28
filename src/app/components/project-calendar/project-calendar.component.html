@@ -1,0 +1,98 @@
+@if (
+    {
+        isSuperAdmin: accountService.isSuperAdmin$.asObservable() | async,
+        isOfficeManager: accountService.isOfficeManager$.asObservable() | async,
+        date: viewDate$.asObservable() | async,
+        direction: direction$.asObservable() | async,
+        employeeId: employeeId$.asObservable() | async,
+        filteredProjects: filteredProjects$.asObservable() | async,
+        selectedDays: selectedDays$.asObservable() | async
+    };
+    as x
+) {
+    <div class="d-flex align-items-center gap-3">
+        <app-month-picker
+            [keysDirection]="x.direction"
+            (dateChange)="onChangeDate($event)"
+        />
+        @if (x.isSuperAdmin || x.isOfficeManager) {
+            <button
+                color="primary"
+                mat-stroked-button
+                type="button"
+                (click)="protectCells()"
+            >
+                <mat-icon>lock</mat-icon>
+                Lock
+            </button>
+        }
+        @if (x.isSuperAdmin || x.isOfficeManager) {
+            <button
+                color="warn"
+                mat-stroked-button
+                type="button"
+                (click)="unprotectCells()"
+            >
+                <mat-icon>lock_open</mat-icon>
+                Unlock
+            </button>
+        }
+    </div>
+
+    <div class="mt-5 user-select-none">
+        <mwl-calendar-month-view
+            [cellTemplate]="customCellTemplate"
+            [events]="events"
+            [headerTemplate]="headerTemplate"
+            [viewDate]="viewDate$ | async"
+            [weekStartsOn]="1"
+            (dayClicked)="selectCell($event.day, x.selectedDays, $event.sourceEvent.ctrlKey)"
+        />
+    </div>
+
+    <ng-template
+        #headerTemplate
+        let-days="days"
+        let-locale="locale"
+    >
+        <div class="d-flex">
+            @for (day of days; track day) {
+                <div class="header-day-item">
+                    {{ day.date.toDateString().split(' ')[0] }}
+                </div>
+            }
+        </div>
+    </ng-template>
+    <ng-template
+        #customCellTemplate
+        let-day="day"
+        let-locale="locale"
+    >
+        <div
+            [class.bg-dashed]="day.events.length && isWeekend(day.date)"
+            [class.empty-cell-focused]="checkIsEmptyMonthDay(day) && canReassignProject"
+            [class.no-event]="!canReassignProject"
+            [class.selected]="x.selectedDays.has(day)"
+            [style.background-color]="getColorEventDay(day)"
+            [style.opacity]="
+                x.filteredProjects?.size === 0 || x.filteredProjects.has(day.events[0]?.meta.projectId) ? 1 : 0.4
+            "
+            class="cal-cell-top custom-cell-grid"
+            (contextmenu)="onRightClick(day, $event.ctrlKey)"
+            (dblclick)="showCellHistory(x.selectedDays)"
+        >
+            @if (day.events[0]?.meta?.protected) {
+                <div class="lock-icon"></div>
+            }
+            <div class="key">
+                @if (day.events.length === 0) {
+                } @else {
+                    <div class="symbol">{{ getTitleEventDay(day) | uppercase | slice: 0 : 1 }}</div>
+                }
+            </div>
+            <div class="day-number">
+                <span>{{ day.date | calendarDate: 'monthViewDayNumber' : locale }}</span>
+            </div>
+        </div>
+    </ng-template>
+}

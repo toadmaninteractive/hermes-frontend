@@ -1,0 +1,53 @@
+:host {
+    display: contents;
+}
+
+::ng-deep .mat-mdc-menu-panel {
+    max-width: 400px;
+}
+
+// prompts table
+.prompts-table {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    &-caption {
+        display: table-caption;
+
+        font-weight: 400;
+        font-style: normal;
+        font-size: 14px;
+        line-height: 21px;
+        font-family: Poppins, sans-serif;
+        text-align: center;
+
+        caption-side: top;
+    }
+
+    tr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 24px;
+
+        font-weight: 400;
+        font-style: normal;
+        font-size: 14px;
+        line-height: 21px;
+        font-family: Poppins, sans-serif;
+
+        gap: 28px;
+
+        &:nth-child(even) {
+            background-color: var(--mat-table-row-item-outline-color);
+        }
+    }
+}
+
+// hotkey icons styles
+.hotkey-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}

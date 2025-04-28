@@ -1,0 +1,66 @@
+@if (
+    {
+        loading: loading$.asObservable() | async,
+        changed: changed$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h1 mat-dialog-title>{{ data ? 'Edit team' : 'New team' }}</h1>
+
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <form
+            [class.text-muted]="x.loading"
+            [formGroup]="teamForm"
+        >
+            <fieldset [disabled]="x.loading">
+                <!--
+        <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+        -->
+
+                <mat-form-field
+                    class="w-100"
+                    subscriptSizing="dynamic"
+                >
+                    <mat-label>Title</mat-label>
+                    <input
+                        [formControlName]="fields.Title"
+                        matInput
+                        placeholder="Title"
+                    />
+                </mat-form-field>
+            </fieldset>
+        </form>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            [mat-dialog-close]="null"
+            mat-button
+            type="button"
+        >
+            No, thanks
+        </button>
+        <button
+            [disabled]="x.loading || !x.changed || null"
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="updateEvent$.next($event)"
+        >
+            {{ teamId ? 'Update team' : 'Create team' }}
+        </button>
+    </div>
+}

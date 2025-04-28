@@ -1,0 +1,71 @@
+@if (
+    {
+        loading: loading$.asObservable() | async,
+        changed: changed$.asObservable() | async,
+        valid: valid$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>{{ data ? 'Edit role' : 'New role' }}</h3>
+
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div mat-dialog-content>
+        <form
+            [class.text-muted]="x.loading"
+            [formGroup]="roleForm"
+            class="dialog-form"
+        >
+            <fieldset [disabled]="x.loading">
+                <!--
+        <m-alert [(message)]="errorMessage" kind="danger"></m-alert>
+        -->
+
+                <mat-form-field class="w-100">
+                    <mat-label>Role title</mat-label>
+                    <input
+                        [formControlName]="field.Title"
+                        matInput
+                    />
+                </mat-form-field>
+                <mat-form-field class="w-100">
+                    <mat-label>Visma code</mat-label>
+                    <input
+                        [formControlName]="field.Code"
+                        matInput
+                    />
+                </mat-form-field>
+            </fieldset>
+        </form>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            [mat-dialog-close]="null"
+            mat-button
+            type="button"
+        >
+            No, thanks
+        </button>
+        <button
+            [disabled]="x.loading || !x.changed || !x.valid"
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="save$.next($event)"
+        >
+            {{ roleId ? 'Update role' : 'Create role' }}
+        </button>
+    </div>
+}

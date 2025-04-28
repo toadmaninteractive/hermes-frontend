@@ -1,0 +1,87 @@
+@if (
+    {
+        employee: employee$.asObservable() | async,
+        highlights: highlights$.asObservable() | async,
+        filteredHighlights: filteredHighlights$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>Highlight {{ x.employee.name }}</h3>
+
+        <button
+            [disableRipple]="true"
+            [mat-dialog-close]="null"
+            class="close"
+            mat-icon-button
+            type="button"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <div mat-dialog-content>
+        <mat-form-field subscriptSizing="dynamic">
+            <mat-chip-grid
+                #chipList
+                aria-label="Highlight selection"
+            >
+                @for (highlight of selectedHighlights; track highlight) {
+                    <mat-chip-row
+                        [removable]="true"
+                        (removed)="onRemove(x.employee.id, x.highlights, highlight.code)"
+                    >
+                        {{ highlight.title }}
+                        <button
+                            class="f-s-18 p-0"
+                            matChipRemove
+                            style="border: none; outline: 0; background: none"
+                            type="button"
+                        >
+                            <mat-icon class="f-s-18">cancel</mat-icon>
+                        </button>
+                    </mat-chip-row>
+                }
+                <input
+                    #highlightInput
+                    [formControl]="highlightInputCtrl"
+                    [matAutocomplete]="auto"
+                    [matChipInputFor]="chipList"
+                    [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                    placeholder="New highlight..."
+                    (matChipInputTokenEnd)="createHighlight(highlightInput.value)"
+                />
+            </mat-chip-grid>
+            <mat-autocomplete
+                #auto="matAutocomplete"
+                (optionSelected)="addHighlight($event.option, x.filteredHighlights)"
+            >
+                @for (highlight of x.filteredHighlights; track highlight) {
+                    <mat-option [value]="highlight.id">
+                        {{ highlight.title }}
+                    </mat-option>
+                }
+            </mat-autocomplete>
+        </mat-form-field>
+    </div>
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            [mat-dialog-close]="null"
+            mat-raised-button
+            type="button"
+        >
+            Cancel
+        </button>
+        <button
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="closeDialog()"
+        >
+            Apply
+        </button>
+    </div>
+}

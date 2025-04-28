@@ -1,0 +1,48 @@
+.warnings-group {
+    padding-left: 18px;
+
+    list-style-type: none;
+
+    border-left: 2px solid var(--bs-tertiary-color);
+
+    li {
+        font-size: 14px;
+    }
+}
+
+.group-name {
+    padding-bottom: 2px;
+
+    text-transform: uppercase;
+
+    color: var(--bs-light-text-emphasis);
+}
+
+.office-label {
+    color: var(--bs-dark-text-emphasis);
+}
+
+.unassigned-icon {
+    color: var(--bs-danger);
+}
+
+.unavailable-icon {
+    color: var(--bs-warning);
+}
+
+mat-icon {
+    &.shift-left {
+        margin-left: -11px;
+    }
+}
+
+.list-head {
+    padding-top: 2px;
+    padding-left: 5px;
+}
+
+.link-to-profile {
+    color: var(--bs-link-color);
+
+    cursor: pointer;
+}

@@ -1,0 +1,131 @@
+@if (
+    {
+        employees: employees$.asObservable() | async,
+        incorrectEmployees: incorrectEmployees$.asObservable() | async,
+        filteredEmployees: filteredEmployees$.asObservable() | async,
+        selectedDate: selectedDateService.selectedDate$.asObservable() | async
+    };
+    as x
+) {
+    <div>
+        <h3 mat-dialog-title>
+            <span>Create Visma report for </span>
+            <span>{{ x.selectedDate | date: 'MMMM, YYYY' }}</span>
+        </h3>
+
+        <button
+            [disableRipple]="true"
+            class="close"
+            mat-icon-button
+            type="button"
+            (click)="dialogRef.close()"
+        >
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+    <div
+        class="d-flex flex-column gap-3"
+        mat-dialog-content
+    >
+        @if (x.incorrectEmployees?.length > 0) {
+            <div
+                class="alert alert-custom alert-outline-warning fade mb-3"
+                role="alert"
+            >
+                <div class="alert-text">
+                    Unavailable roles:<br />
+                    @for (user of x.incorrectEmployees | slice: 0 : 3; track user; let i = $index) {
+                        <ng-container class="affects-list">
+                            <span>{{ user.name }}</span>
+                            @if (i !== (x.incorrectEmployees | slice: 0 : 3).length - 1) {
+                                <span>, </span>
+                            }
+                        </ng-container>
+                    }
+                    @if (x.incorrectEmployees.length - 3 > 0) {
+                        <span
+                            [class.more-users_open]="showFullList"
+                            class="more-users"
+                            (click)="toggleShowMode()"
+                        >
+                            +{{ x.incorrectEmployees.length - 3 }} employees
+                        </span>
+                    }
+                    @if (showFullList) {
+                        <div
+                            [@fadeAnimation]="showFullList"
+                            class="affects-list"
+                        >
+                            @for (user of x.incorrectEmployees | slice: 3; track user; let i = $index) {
+                                <ng-container class="affects-list">
+                                    <span>{{ user.name }}</span>
+                                    @if (i !== (x.incorrectEmployees | slice: 3).length - 1) {
+                                        <span class="comma">, </span>
+                                    }
+                                </ng-container>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <mat-form-field
+            style="width: 400px"
+            subscriptSizing="dynamic"
+        >
+            <input
+                #comment
+                autocomplete="off"
+                matInput
+                placeholder="Comment (optional)"
+            />
+        </mat-form-field>
+
+        <mat-form-field
+            style="width: 400px"
+            subscriptSizing="dynamic"
+        >
+            <mat-select
+                [(ngModel)]="omittedEmployees"
+                [multiple]="true"
+                placeholder="Omit employees (optional)"
+            >
+                <mat-option>
+                    <ngx-mat-select-search
+                        ngModel
+                        noEntriesFoundLabel="No matches"
+                        placeholderLabel="Type to filter..."
+                        (ngModelChange)="filterEmployees($event, x.employees)"
+                    />
+                </mat-option>
+                @for (employee of x.filteredEmployees; track employee) {
+                    <mat-option [value]="employee.id">
+                        {{ employee.name }}
+                    </mat-option>
+                }
+            </mat-select>
+        </mat-form-field>
+    </div>
+
+    <div
+        align="end"
+        mat-dialog-actions
+    >
+        <button
+            mat-raised-button
+            type="button"
+            (click)="dialogRef.close(null)"
+        >
+            Cancel
+        </button>
+        <button
+            color="primary"
+            mat-raised-button
+            type="button"
+            (click)="dialogRef.close({ comment: comment.value, omitted: omittedEmployees })"
+        >
+            Create
+        </button>
+    </div>
+}
