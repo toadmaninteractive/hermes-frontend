@@ -1,0 +1,13 @@
+# Dirs
+.angular
+.git
+.idea
+.nx
+.vscode
+dist
+node_modules
+
+# Files
+.dockerignore
+.gitignore
+Dockerfile
