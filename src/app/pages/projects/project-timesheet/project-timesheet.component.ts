@@ -22,6 +22,7 @@ import { InlineSVGModule } from 'ng-inline-svg-2';
 import { ProjectSwitchDialogComponent } from 'src/app/components/project-switch-dialog/project-switch-dialog.component';
 import { AccountService } from '../../../core/services/account.service';
 import { CacheService } from '../../../core/services/cache.service';
+import { ExcelService } from '../../../core/services/excel.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { SelectedDateService } from '../../../core/services/selected-date.service';
 import { AbstractTimesheetComponent } from '../../../shared/classes/abstract-timesheet';
@@ -144,7 +145,8 @@ export class ProjectTimesheetComponent
         public override taskService: HermesTaskService,
         public override timesheetService: HermesTimesheetService,
         public override pseudoClipboardService: PseudoClipboardService,
-        protected override confirmationService: ConfirmationService
+        protected override confirmationService: ConfirmationService,
+        protected override excelService: ExcelService,
     ) {
         super(
             employeeService,
@@ -155,7 +157,8 @@ export class ProjectTimesheetComponent
             pseudoClipboardService,
             dialog,
             cacheService,
-            confirmationService
+            confirmationService,
+            excelService,
         );
     }
 
@@ -755,5 +758,14 @@ export class ProjectTimesheetComponent
                 entity: [...selectedCells]
             } as HistoryDialogData
         });
+    }
+
+    protected onGenerateAllocationSummary(): void {
+        const selectedDate = this.selectedDateService.selectedDate$.getValue();
+        const project = this.project$.getValue();
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1;
+        const title = `${project.title}_${year}-${month}`;
+        this.generateAllocationSummary(title, `allocation_summary`);
     }
 }
