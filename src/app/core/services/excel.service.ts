@@ -9,7 +9,7 @@ import { saveAs } from 'file-saver';
 })
 export class ExcelService {
     constructor() {}
-    generateExcel(rows: Map<string, string>[], fileName: string): void {
+    generateDailyAllocationReport(rows: Map<string, string>[], fileName: string): void {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet 1', {
             views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }]

@@ -647,7 +647,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
             .subscribe((v) => {
                 const rows = this.buildAllocationPerProjectReport(v, date);
 
-                this.excelService.generateExcel(
+                this.excelService.generateDailyAllocationReport(
                     rows,
                     `Allocation-per-project-${format(date, 'MMM-Y')}`
                 );
