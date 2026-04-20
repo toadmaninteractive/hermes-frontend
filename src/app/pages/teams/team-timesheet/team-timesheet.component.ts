@@ -22,6 +22,7 @@ import { BehaviorSubject, combineLatest, from, of } from 'rxjs';
 import { InlineSVGModule } from 'ng-inline-svg-2';
 import { AccountService } from '../../../core/services/account.service';
 import { CacheService } from '../../../core/services/cache.service';
+import { ExcelService } from "../../../core/services/excel.service";
 import { NotificationService } from '../../../core/services/notification.service';
 import { SelectedDateService } from '../../../core/services/selected-date.service';
 import { AbstractTimesheetComponent } from '../../../shared/classes/abstract-timesheet';
@@ -123,7 +124,8 @@ export class TeamTimesheetComponent
         private teamService: HermesTeamService,
         private roleService: HermesRoleService,
         public override pseudoClipboardService: PseudoClipboardService,
-        protected override confirmationService: ConfirmationService
+        protected override confirmationService: ConfirmationService,
+        protected override excelService: ExcelService,
     ) {
         super(
             employeeService,
@@ -134,7 +136,8 @@ export class TeamTimesheetComponent
             pseudoClipboardService,
             dialog,
             cacheService,
-            confirmationService
+            confirmationService,
+            excelService
         );
     }
 
@@ -454,5 +457,14 @@ export class TeamTimesheetComponent
                 entity: [...selectedCells]
             } as HistoryDialogData
         });
+    }
+
+    protected onGenerateAllocationSummary(): void {
+        const selectedDate = this.selectedDateService.selectedDate$.getValue();
+        const team = this.team$.getValue();
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1;
+        const title = `${team.title}_${year}-${month}`;
+        this.generateAllocationSummary(title, `allocation_summary`);
     }
 }
