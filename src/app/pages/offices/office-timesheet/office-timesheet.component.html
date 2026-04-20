@@ -102,6 +102,7 @@
                         (protect)="certainProtectTimesheet(x.office, x.employees, x.timesheet)"
                         (regenerate)="onRegenerate(x.selectedDate)"
                         (showTimesheetHistory)="showTimesheetHistory(x.office, x.selectedDate)"
+                        (generateAllocationSummary)="onGenerateAllocationSummary()"
                         (synchronize)="onSynchronize(x.office, x.selectedDate)"
                         (unprotect)="unprotectTimesheet(x.timesheet)"
                     />

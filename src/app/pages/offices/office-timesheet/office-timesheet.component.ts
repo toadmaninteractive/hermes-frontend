@@ -27,6 +27,7 @@ import {
     Role,
     TimesheetCell
 } from '../../../protocol/db-protocol';
+import { ExcelService } from '../../../core/services/excel.service';
 import { SelectedDateService } from '../../../core/services/selected-date.service';
 import { HermesTimesheetService } from '../../../protocol/timesheet-protocol.service';
 import { OfficeSwitchDialogComponent } from '../../projects/office-switch-dialog/office-switch-dialog.component';
@@ -124,7 +125,8 @@ export class OfficeTimesheetComponent
         public override timesheetService: HermesTimesheetService,
         private hermesRoleService: HermesRoleService,
         public override pseudoClipboardService: PseudoClipboardService,
-        protected override confirmationService: ConfirmationService
+        protected override confirmationService: ConfirmationService,
+        protected override excelService: ExcelService,
     ) {
         super(
             employeeService,
@@ -135,7 +137,8 @@ export class OfficeTimesheetComponent
             pseudoClipboardService,
             dialog,
             cacheService,
-            confirmationService
+            confirmationService,
+            excelService,
         );
     }
 
@@ -444,5 +447,14 @@ export class OfficeTimesheetComponent
                 .pipe(filter(Boolean), takeUntil(this.destroy$))
                 .subscribe(() => this.protectTimesheet(timesheet));
         }
+    }
+
+    protected onGenerateAllocationSummary(): void {
+        const selectedDate = this.selectedDateService.selectedDate$.getValue();
+        const office = this.office$.getValue();
+        const year = selectedDate.getFullYear();
+        const month = selectedDate.getMonth() + 1;
+        const title = `${office.name}_${year}-${month}`;
+        this.generateAllocationSummary(title, `allocation_summary`);
     }
 }
