@@ -19,7 +19,19 @@
             (click)="showTimesheetHistoryHandle()"
         >
             <mat-icon>history</mat-icon>
-            <span>Action history</span>
+            <span>Action History</span>
+        </button>
+    }
+
+    @if (privileges.canEditCell) {
+        <button
+            [disabled]="synchronizing"
+            mat-menu-item
+            type="button"
+            (click)="generateAllocationSummaryHandle()"
+        >
+            <mat-icon>assignment_turned_in</mat-icon>
+            <span>Allocation Summary</span>
         </button>
     }
 
@@ -43,7 +55,7 @@
             (click)="addEmployeeToProjectHandle()"
         >
             <mat-icon>exposure_plus_1</mat-icon>
-            <span>Add to project</span>
+            <span>Add to Project</span>
         </button>
     }
 
@@ -55,7 +67,7 @@
             (click)="addEmployeeToTeamHandle()"
         >
             <mat-icon>exposure_plus_1</mat-icon>
-            <span>Add to team</span>
+            <span>Add to Team</span>
         </button>
     }
 
@@ -118,7 +130,6 @@
             (click)="protectTimesheetHandle()"
         >
             <mat-icon>lock</mat-icon>
-
             <span>Lock</span>
         </button>
     }

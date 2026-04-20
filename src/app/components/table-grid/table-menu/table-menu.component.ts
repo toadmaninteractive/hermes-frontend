@@ -45,6 +45,7 @@ export class TableMenuComponent implements OnInit {
     @Output() readonly protect = new EventEmitter();
     @Output() readonly regenerate = new EventEmitter();
     @Output() readonly showTimesheetHistory = new EventEmitter();
+    @Output() readonly generateAllocationSummary = new EventEmitter();
     @Output() readonly synchronize = new EventEmitter();
     @Output() readonly addEmployeeToProject = new EventEmitter();
     @Output() readonly addEmployeeToTeam = new EventEmitter();
@@ -81,6 +82,10 @@ export class TableMenuComponent implements OnInit {
 
     showTimesheetHistoryHandle(): void {
         this.showTimesheetHistory.emit();
+    }
+
+    generateAllocationSummaryHandle(): void {
+        this.generateAllocationSummary.emit();
     }
 
     synchronizeHandle(): void {
