@@ -8,7 +8,6 @@ import { saveAs } from 'file-saver';
     providedIn: 'root'
 })
 export class ExcelService {
-    constructor() {}
     generateDailyAllocationReport(rows: Map<string, string>[], fileName: string): void {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet 1', {
@@ -45,6 +44,49 @@ export class ExcelService {
 
         this.autoFitColumnWidth(worksheet);
 
+        workbook.xlsx.writeBuffer().then((buffer) => {
+            const blob = new Blob([buffer], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            saveAs(blob, `${fileName}.xlsx`);
+        });
+    }
+
+    generateAllocationSummaryReport(projects: string[], employeeAllocs: Map<string, string>[], title: string, fileName: string): void {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(title || 'Sheet 1', {
+            views: [{ state: 'frozen', ySplit: 1, xSplit: 1 }]
+        });
+
+        // Define header columns
+        const headers = ['Employee', ...projects];
+        worksheet.columns = headers.map((h) => ({ header: h, key: h }));
+
+        // Define rows
+        employeeAllocs.forEach((item) => {
+            worksheet.addRow(Object.fromEntries(item.entries()));
+        });
+
+        // Mark headers
+        worksheet.getColumn(1).fill = { pattern: 'solid', type: 'pattern', fgColor: { argb: 'FFD3D3D3' } };
+        worksheet.getRow(1).fill =  { pattern: 'solid', type: 'pattern', fgColor: { argb: 'FFD3D3D3' } };
+
+        // Mark employees without projects
+        worksheet
+            .getRows(2, worksheet.rowCount - 1)
+            .forEach((row, index) => {
+                const cell = row.getCell(1);
+                const allocs = [...employeeAllocs.at(index).values()].filter(v => v && v !== cell.text);
+
+                if (allocs.length === 0) {
+                    row.fill = { pattern: 'solid', type: 'pattern', fgColor: { argb: 'FFFA8072' } };
+                }
+            });
+
+        // Size columns
+        this.autoFitColumnWidth(worksheet);
+
+        // Produce output
         workbook.xlsx.writeBuffer().then((buffer) => {
             const blob = new Blob([buffer], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
