@@ -27,6 +27,7 @@ import {
 } from '../../protocol/web-protocol';
 import { HermesEmployeeService } from '../../protocol/web-employee-protocol.service';
 import { HermesTimesheetService } from '../../protocol/timesheet-protocol.service';
+import { ExcelService } from '../../core/services/excel.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { HermesTaskService } from '../../protocol/task-protocol.service';
 import {
@@ -79,7 +80,8 @@ export class AbstractTimesheetComponent {
         public pseudoClipboardService: PseudoClipboardService,
         public dialog: MatDialog,
         public cacheService: CacheService,
-        protected confirmationService: ConfirmationService
+        protected confirmationService: ConfirmationService,
+        protected excelService: ExcelService,
     ) {}
 
     @HostListener('window:keydown.alt.arrowright', ['$event']) onAltArrowRight(
@@ -1101,5 +1103,46 @@ export class AbstractTimesheetComponent {
             this.notificationService.error(e.message);
             return false;
         }
+    }
+
+    protected generateAllocationSummary(title: string, filename: string): void {
+        const timesheet = this.timesheet$.getValue();
+
+        if (!timesheet)
+            return;
+
+        // Deduct projects
+        const projectSet = timesheet.reduce((acc, entry) => {
+            return entry.cells
+                .filter((cell) => Boolean(cell.projectName))
+                .reduce((acc0, cell) => acc0.add(cell.projectName), acc);
+        }, new Set<string>());
+
+        const projects = Array.from(projectSet).sort();
+        const projectMapDraft = projects.reduce((acc, project) => acc.set(project, 0), new Map<string, number>());
+
+        // Calculate allocations
+        const employeeAllocs = timesheet
+            .map(entry => {
+                const allocMap = entry.cells
+                    .filter((cell) => Boolean(cell.projectName))
+                    .reduce((acc0, cell) => {
+                        const value = acc0.get(cell.projectName) || 0;
+                        return acc0.set(cell.projectName, value + 1);
+                    }, new Map(projectMapDraft));
+
+                const keys = Array.from(allocMap.keys());
+
+                const finalMap = keys.reduce((acc0, key) => {
+                    const value = allocMap.get(key);
+                    return acc0.set(key, value ? `${value}`: '');
+                }, new Map<string, string>());
+
+                finalMap.set('Employee', entry.personnelName);
+
+                return finalMap;
+            });
+
+        this.excelService.generateAllocationSummaryReport(projects, employeeAllocs, title, filename);
     }
 }
